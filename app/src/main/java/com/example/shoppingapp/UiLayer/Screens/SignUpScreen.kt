@@ -14,7 +14,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -52,29 +54,30 @@ import com.example.shoppingapp.ui.theme.Pink80
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-
 fun SignUpScreen(navController: NavController) {
 
-//    val Viewmodel: ShoppingVm = hiltViewModel()
-//    val state = Viewmodel.signupState.collectAsState()
+    val Viewmodel: ShoppingVm = hiltViewModel()
+    val state = Viewmodel.signupState.collectAsState()
 
-//    if (.value.isLoading) {
-//        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center){
-//            CircularProgressIndicator()
-//        }
-//    }
+    if (state.value.isLoading) {
+        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center){
+            CircularProgressIndicator()
+        }
+    }
     val context = LocalContext.current
-//    if (state.value.error.toString().isNotBlank()) {
-//        Toast.makeText(context, "${state.value.error}", Toast.LENGTH_SHORT).show()
-//    }
-//    if (state.value.userData!=null){
-//        Toast.makeText(context, "${state.value.userData}", Toast.LENGTH_SHORT).show()
-//    }
+    if (state.value.error.toString().isNotBlank()) {
+        Toast.makeText(context, "${state.value.error}", Toast.LENGTH_SHORT).show()
+    }
+    else if (state.value.userData!=null){
+        Toast.makeText(context, "${state.value.userData}", Toast.LENGTH_SHORT).show()
+    }
+
 
         var fname by remember { mutableStateOf("") }
         var lname by remember { mutableStateOf("") }
         var email by remember { mutableStateOf("") }
-
+    var phone by remember { mutableStateOf("") }
+    var address by remember { mutableStateOf("") }
         var password by remember { mutableStateOf("") }
         var confirmpassword by remember { mutableStateOf("") }
 
@@ -137,7 +140,10 @@ fun SignUpScreen(navController: NavController) {
                     )
                 }
 
-                Column(Modifier.fillMaxWidth()) {
+                Column(
+                    Modifier
+                        .fillMaxWidth()
+                        .verticalScroll(rememberScrollState())) {
                     Spacer(modifier = Modifier.padding(vertical = 10.dp))
 
                     OutlinedTextField(value = email,
@@ -153,6 +159,39 @@ fun SignUpScreen(navController: NavController) {
                         shape = RoundedCornerShape(18.dp)
                     )
                     Spacer(modifier = Modifier.padding(vertical = 10.dp))
+
+                    OutlinedTextField(value = phone,
+                        onValueChange = {
+                            phone = it
+                        },
+                        placeholder = { Text(text = "Phone No") },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 8.dp),
+                        colors = TextFieldDefaults.outlinedTextFieldColors(
+                            focusedBorderColor = Pink80,
+                            unfocusedBorderColor = Pink80
+                        ),
+                        shape = RoundedCornerShape(18.dp)
+                    )
+                    Spacer(modifier = Modifier.padding(vertical = 10.dp))
+
+                    OutlinedTextField(value = address,
+                        onValueChange = {
+                            address = it
+                        },
+                        placeholder = { Text(text = "Address") },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 8.dp),
+                        colors = TextFieldDefaults.outlinedTextFieldColors(
+                            focusedBorderColor = Pink80,
+                            unfocusedBorderColor = Pink80
+                        ),
+                        shape = RoundedCornerShape(18.dp)
+                    )
+                    Spacer(modifier = Modifier.padding(vertical = 10.dp))
+
                     OutlinedTextField(value = password,
                         onValueChange = {
                             password = it
@@ -184,8 +223,8 @@ fun SignUpScreen(navController: NavController) {
                     Button(
                         onClick = {
                             Toast.makeText(context, "Signup is clicked", Toast.LENGTH_SHORT).show()
-                            val userModel = SignUpModel(fname + " "+lname, email,confirmpassword)
-//                           .register(userModel)
+                            val userModel = SignUpModel(fname + " "+lname, email,phone,address,confirmpassword)
+                           Viewmodel.register(userModel)
                         },
                         colors = ButtonDefaults.buttonColors(Pink80),
                         modifier = Modifier.fillMaxWidth()
@@ -233,3 +272,6 @@ fun SignUpScreen(navController: NavController) {
 
     }
 }
+
+
+

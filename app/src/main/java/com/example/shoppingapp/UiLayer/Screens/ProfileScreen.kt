@@ -2,22 +2,32 @@ package com.example.shoppingapp.UiLayer.Screens
 
 import android.util.Log
 import android.widget.Toast
-import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AccountCircle
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextFieldDefaults
@@ -30,7 +40,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -42,49 +54,80 @@ import com.example.shoppingapp.DomainLayer.Model.SignUpModel
 import com.example.shoppingapp.DomainLayer.Model.UserParentData
 import com.example.shoppingapp.R
 import com.example.shoppingapp.UiLayer.ViewModel.ShoppingVm
+import com.example.shoppingapp.UiLayer.ViewModel.UserDetailState
 import com.example.shoppingapp.ui.theme.Pink80
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firestore.v1.TransactionOptions.ReadOnly
-import kotlinx.coroutines.delay
+
+
+var isDialog by mutableStateOf(false)
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 
-fun ProfileScreen(firebaseAuth: FirebaseAuth, viewmodel: ShoppingVm = hiltViewModel()) {
-//    val uid = firebaseAuth.uid.toString()
+fun ProfileScreen(
+    firebaseAuth: FirebaseAuth, viewmodel: ShoppingVm = hiltViewModel(),
+    navHostController: () -> Unit,
+) {
 
-
-//    viewmodel.userProfileData()
-//    val state = viewmodel.userdata.collectAsState()
-
+    val uid = firebaseAuth.uid.toString()
+   LaunchedEffect (key1=true){
+       viewmodel.userProfileData(uid)
+   }
+    val state = viewmodel.userdata.collectAsState()
 
     var fname by remember { mutableStateOf("") }
     var lname by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
-
+    var phoneNo by remember{ mutableStateOf("") }
+    var address by remember { mutableStateOf("") }
     val EditButtonSelected = remember {
         mutableStateOf(false)
     }
 
-    val ReadOnly by remember{
+    val ReadOnly by remember {
         if (EditButtonSelected.value == false) {
             mutableStateOf(true)
         } else {
             mutableStateOf(false)
         }
     }
-//    if (state.value.userData != UserParentData() && state.value.userData!!.signUpModel != SignUpModel("","","")) {
-//        Log.d("USERDATAOUTLAUNCH","${state.value.userData}")
-//        LaunchedEffect(key1 = true) {
-//            Log.d("USERDATAINLAUNCH","${state.value.userData}")
-//            email = state.value.userData!!.signUpModel!!.email
-//            var name = state.value.userData.signUpModel.name
-//            val split_name = name.split(" ")
-//            fname = split_name.first()
-//            lname = split_name.last()
-//            Log.d("USERINFO", "${state.value.userData!!.signUpModel}")
-//        }
-//    }
+
+    if (isDialog == true) {
+        DialogBox(firebaseAuth, navHostController)
+    }
+    val context = LocalContext.current
+    when (state.value) {
+        is UserDetailState.Error -> {
+            Toast.makeText(
+                context,
+                "${(state.value as UserDetailState.Error).message}",
+                Toast.LENGTH_SHORT
+            ).show()
+        }
+
+        is UserDetailState.Loading -> {
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                CircularProgressIndicator()
+            }
+        }
+
+        is UserDetailState.Success -> {
+
+            LaunchedEffect(key1 = true) {
+            val successData = state.value as? UserDetailState.Success
+                successData?.let {
+                    Log.d("USERDATA","${it.userParentData.signUpModel}")
+                   email = it.userParentData.signUpModel.email
+                    var fullName = it.userParentData.signUpModel.name
+                    fname = fullName.substringBefore(" ")
+                    lname = fullName.substringAfter(" ")
+                    phoneNo = it.userParentData.signUpModel.phone
+                    address = it.userParentData.signUpModel.address
+                }
+            }
+        }
+    }
 
 
     var password by remember { mutableStateOf("") }
@@ -103,7 +146,8 @@ fun ProfileScreen(firebaseAuth: FirebaseAuth, viewmodel: ShoppingVm = hiltViewMo
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(30.dp),
+                .padding(30.dp)
+                .verticalScroll(rememberScrollState()),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
@@ -127,8 +171,7 @@ fun ProfileScreen(firebaseAuth: FirebaseAuth, viewmodel: ShoppingVm = hiltViewMo
                     },
                     placeholder = { Text(text = "First Name") },
                     modifier = Modifier
-                        .width(150.dp)
-                        .padding(horizontal = 8.dp),
+                        .width(150.dp),
                     colors = TextFieldDefaults.outlinedTextFieldColors(
                         focusedBorderColor = Pink80,
                         unfocusedBorderColor = Pink80
@@ -142,8 +185,7 @@ fun ProfileScreen(firebaseAuth: FirebaseAuth, viewmodel: ShoppingVm = hiltViewMo
                     },
                     placeholder = { Text(text = "Last Name") },
                     modifier = Modifier
-                        .width(150.dp)
-                        .padding(horizontal = 8.dp),
+                        .width(150.dp),
                     colors = TextFieldDefaults.outlinedTextFieldColors(
                         focusedBorderColor = Pink80,
                         unfocusedBorderColor = Pink80
@@ -170,11 +212,11 @@ fun ProfileScreen(firebaseAuth: FirebaseAuth, viewmodel: ShoppingVm = hiltViewMo
                 )
                 Spacer(modifier = Modifier.padding(vertical = 10.dp))
                 OutlinedTextField(
-                    value = password,
+                    value = phoneNo,
                     onValueChange = {
-                        password = it
+                        phoneNo = it
                     },
-                    placeholder = { Text(text = "Create Password") },
+                    placeholder = { Text(text = "Phone No ") },
                     modifier = Modifier.fillMaxWidth(),
                     colors = TextFieldDefaults.outlinedTextFieldColors(
                         focusedBorderColor = Pink80,
@@ -184,11 +226,11 @@ fun ProfileScreen(firebaseAuth: FirebaseAuth, viewmodel: ShoppingVm = hiltViewMo
                 )
                 Spacer(modifier = Modifier.padding(vertical = 10.dp))
                 OutlinedTextField(
-                    value = confirmpassword,
+                    value = address,
                     onValueChange = {
-                        confirmpassword = it
+                        address= it
                     },
-                    placeholder = { Text(text = "Confirm Password") },
+                    placeholder = { Text(text = "Address") },
                     modifier = Modifier.fillMaxWidth(),
                     colors = TextFieldDefaults.outlinedTextFieldColors(
                         focusedBorderColor = Pink80,
@@ -198,19 +240,17 @@ fun ProfileScreen(firebaseAuth: FirebaseAuth, viewmodel: ShoppingVm = hiltViewMo
                 )
                 val context = LocalContext.current
                 Spacer(modifier = Modifier.padding(vertical = 10.dp))
-
                 Column() {
                     Button(
                         onClick = {
+                            if (EditButtonSelected.value == true) {
 
-                            if (EditButtonSelected.value == false){
-                                EditButtonSelected.value = true
-                            }
-
-                            if (EditButtonSelected.value == false){
                                 // Save Code
 
-                                EditButtonSelected.value = true
+                            }
+                            if (EditButtonSelected.value == false) {
+                                //Log Out Code
+                                isDialog = true
                             }
 
 
@@ -221,12 +261,12 @@ fun ProfileScreen(firebaseAuth: FirebaseAuth, viewmodel: ShoppingVm = hiltViewMo
                             .padding(vertical = 5.dp), shape = RoundedCornerShape(8.dp)
                     ) {
 
-                        if (EditButtonSelected.value == false){
+                        if (EditButtonSelected.value == false) {
                             //Log Out
                             Text(text = "Log Out")
                         }
 
-                        if (EditButtonSelected.value == true){
+                        if (EditButtonSelected.value == true) {
                             // Save Code
                             Text(text = "Save")
                         }
@@ -252,4 +292,64 @@ fun ProfileScreen(firebaseAuth: FirebaseAuth, viewmodel: ShoppingVm = hiltViewMo
         }
 
     }
+}
+
+@Composable
+
+fun DialogBox(firebaseAuth: FirebaseAuth, navHostController: () -> Unit) {
+    AlertDialog(icon = {
+
+        Image(
+            imageVector = Icons.Default.AccountCircle,
+            contentDescription = null,             // crop the image if it's not a square
+            modifier = Modifier
+                .size(150.dp)
+                .clip(CircleShape)                       // clip to the circle shape
+                .border(2.dp, Color.Gray, CircleShape), contentScale = ContentScale.Fit
+        )
+    }, text = {
+        Text(
+            text = "Do You Really Want to Logout ?",
+            fontSize = 20.sp,
+            textAlign = TextAlign.Center, color = Color.Black
+        )
+    }, title = {
+        Text(
+            text = "Log Out",
+            fontWeight = FontWeight.Bold,
+            fontSize = 32.sp,
+            modifier = Modifier.fillMaxWidth(),
+            textAlign = TextAlign.Center, color = Pink80
+        )
+    },
+        onDismissRequest = {
+            isDialog = false
+        },
+        confirmButton = {
+            OutlinedButton(
+                onClick = {
+                    firebaseAuth.signOut()
+                    navHostController()
+                },
+                modifier = Modifier.fillMaxWidth(),
+                colors = ButtonDefaults.buttonColors(Pink80),
+                shape = RoundedCornerShape(8.dp),
+                border = BorderStroke(0.dp, Color.Transparent)
+            ) {
+                Text(text = "LogOut", fontWeight = FontWeight.Medium)
+            }
+        }, dismissButton = {
+            OutlinedButton(
+                onClick = {
+                    isDialog = false
+                },
+                modifier = Modifier.fillMaxWidth(),
+                colors = ButtonDefaults.buttonColors(Color.Transparent),
+                shape = RoundedCornerShape(8.dp),
+                border = BorderStroke(1.dp, Pink80)
+            ) {
+                Text(text = "Cancel", color = Pink80)
+            }
+        }
+    )
 }

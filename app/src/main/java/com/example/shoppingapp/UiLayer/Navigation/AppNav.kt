@@ -13,13 +13,14 @@ import com.google.firebase.auth.FirebaseAuth
 @Composable
 fun AppNav(firebaseAuth: FirebaseAuth) {
     val navController = rememberNavController()
-//    val startdestination = if (firebaseAuth.currentUser == null) {
-//        Routes.Auth
-//    } else  {
-//        Routes.Main
-//    }
+    val startdestination = if (firebaseAuth.currentUser == null) {
+        Routes.Auth
+    } else  {
+        Routes.Main
+    }
 
-    NavHost(navController = navController, startDestination = Routes.Auth) {
+
+    NavHost(navController = navController, startDestination = startdestination) {
         navigation<Routes.Auth>(startDestination =Routes.Login) {
             composable<Routes.Login> {
                 SigninScreen(navController)
@@ -31,7 +32,7 @@ fun AppNav(firebaseAuth: FirebaseAuth) {
 
         navigation<Routes.Main>(startDestination = Routes.BottomBar) {
             composable<Routes.BottomBar>{
-                BottomBar(firebaseAuth)
+                BottomBar(firebaseAuth,navController)
             }
         }
     }

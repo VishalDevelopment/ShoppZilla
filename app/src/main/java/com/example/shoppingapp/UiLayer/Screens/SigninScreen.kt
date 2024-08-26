@@ -1,5 +1,6 @@
 package com.example.shoppingapp.UiLayer.Screens
 
+import android.content.Context
 import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.Image
@@ -41,54 +42,47 @@ import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.fragment.app.FragmentManager.BackStackEntry
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.example.shoppingapp.DomainLayer.Model.LoginModel
 import com.example.shoppingapp.R
 import com.example.shoppingapp.UiLayer.Navigation.Routes
+import com.example.shoppingapp.UiLayer.ViewModel.LoginState
 import com.example.shoppingapp.UiLayer.ViewModel.ShoppingVm
 import com.example.shoppingapp.ui.theme.Pink80
 
+val showDialog = mutableStateOf(false)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 
 fun SigninScreen(navController: NavController) {
-//    val viewmodel :ShoppingVm = hiltViewModel()
-//    val state = viewmodel.loginState.collectAsState()
-    
-//    if (state.value.isLoading){
-//        if (state.value.isLoading) {
-//            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center){
-//                CircularProgressIndicator()
-//            }
-//        }
-//    }
-    val context = LocalContext.current
-//    if (state.value.userData!="" ){
-//    Log.d("CHECK","CHECK : ${state.value.userData}")
-//      AlertDialog(title = { Text(text = "Shopping App")}, text = { Text(text = "Loggedin Succesfully")}, onDismissRequest = {
-//          Toast.makeText(context, "Dismissed Dialog !!", Toast.LENGTH_SHORT).show()
-//      }, confirmButton = { TextButton(
-//          onClick = {
-//              // Navigate
-//              Toast.makeText(context, "Continue Clicked !!", Toast.LENGTH_SHORT).show()
-//              navController.navigate(Routes.Main)
-//          }) {
-//          Text(text = "Continue")
-//      } }, dismissButton = {
-//          TextButton(onClick = {
-//              Toast.makeText(context, "Dismissed Clicked !!", Toast.LENGTH_SHORT).show()
-//
-//          }) {
-//              Text(text = "Close !!")
-//          }
-//      })
-//    }
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
+    val viewmodel :ShoppingVm = hiltViewModel()
+    val state = viewmodel.loginState.collectAsState()
+    val context = LocalContext.current
+
+
+    if (state.value== LoginState.Loading){
+        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center){
+            CircularProgressIndicator()
+            Log.d("COMP","LOAD : ")
+        }
+    }
+    else if (state.value == LoginState.Error("Error ")){
+        Log.d("COMP","ERR : ")
+        Toast.makeText(context, "${(state.value as LoginState.Error)}", Toast.LENGTH_SHORT).show()
+    }
+    else if (state.value == LoginState.Succes){
+        showDialog.value = true
+        if (showDialog.value==true){
+            LoginPopUp(navController,context)
+        }
+        Log.d("COMP","SUCCESS : ")
+    }
 
     Box(modifier = Modifier.fillMaxSize()) {
         Box(contentAlignment = Alignment.TopEnd, modifier = Modifier.fillMaxWidth()) {
@@ -148,9 +142,8 @@ fun SigninScreen(navController: NavController) {
                 Button(
                     onClick = {
                         Toast.makeText(context, "Login is clicked", Toast.LENGTH_SHORT).show()
-//                        val loginModel = LoginModel(email,password)
-//                        viewmodel.login(loginModel)
-                        navController.navigate(Routes.Main)
+                        val loginModel = LoginModel(email,password)
+                        viewmodel.login(loginModel)
                     },
                     colors = ButtonDefaults.buttonColors(Pink80),
                     modifier = Modifier.fillMaxWidth()
@@ -196,6 +189,27 @@ fun SigninScreen(navController: NavController) {
 
         }
 
-
     }
+
+}
+
+@Composable
+fun LoginPopUp(navController: NavController, context: Context) {
+    AlertDialog(title = { Text(text = "Shopping App")}, text = { Text(text = "Login Succesfully")}, onDismissRequest = {
+        Toast.makeText(context, "Dismissed Dialog !!", Toast.LENGTH_SHORT).show()
+    }, confirmButton = { TextButton(
+        onClick = {
+            Toast.makeText(context, "Continue Clicked !!", Toast.LENGTH_SHORT).show()
+            navController.navigate(Routes.Main)
+        }) {
+        Text(text = "Continue")
+    } }, dismissButton = {
+        TextButton(onClick = {
+            showDialog.value = false
+            Toast.makeText(context, "Dismissed Clicked !!", Toast.LENGTH_SHORT).show()
+
+        }) {
+            Text(text = "Close !!")
+        }
+    })
 }

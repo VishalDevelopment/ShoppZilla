@@ -27,6 +27,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -48,7 +49,7 @@ data class BottomItem(
 
 @Composable
 
-fun BottomBar(firebaseAuth: FirebaseAuth) {
+fun BottomBar(firebaseAuth: FirebaseAuth,MainNavHost:NavHostController) {
 
     val navController = rememberNavController()
 
@@ -108,7 +109,14 @@ fun BottomBar(firebaseAuth: FirebaseAuth) {
                     CartScreen()
                 }
                 composable<Routes.Profile> {
-                    ProfileScreen(firebaseAuth = firebaseAuth)
+                    ProfileScreen(firebaseAuth = firebaseAuth){
+                            MainNavHost.navigate(Routes.Auth) {
+                                popUpTo(route = Routes.Main) {
+                                    inclusive = true
+                                }
+                            }
+                        }
+
                 }
             }
         }
