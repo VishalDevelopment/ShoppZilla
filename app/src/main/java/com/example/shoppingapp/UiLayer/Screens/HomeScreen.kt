@@ -42,6 +42,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.paint
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.Placeholder
 import androidx.compose.ui.text.font.FontWeight
@@ -52,9 +53,11 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
 import coil.compose.rememberAsyncImagePainter
+import coil.request.ImageRequest
 import com.example.shoppingapp.DomainLayer.Model.CategoryModel
 import com.example.shoppingapp.R
 import com.example.shoppingapp.UiLayer.ViewModel.CategoryState
+import com.example.shoppingapp.UiLayer.ViewModel.ProductState
 import com.example.shoppingapp.UiLayer.ViewModel.ShoppingVm
 import com.example.shoppingapp.ui.theme.Pink80
 
@@ -64,9 +67,10 @@ fun HomeScreen() {
     val viewmodel: ShoppingVm = hiltViewModel()
     LaunchedEffect(key1 = Unit) {
         viewmodel.getCategory()
+        viewmodel.getProduct()
     }
     val categorystate = viewmodel.CategoriesData.collectAsState()
-
+    val productState = viewmodel.productList.collectAsState()
     when (categorystate.value) {
         is CategoryState.Error -> {
             Log.d("HOME", "Error")
@@ -82,7 +86,18 @@ fun HomeScreen() {
             categoryData.value = categoryList
     }
     }
-
+    when(productState.value){
+        is ProductState.Error -> {
+            Log.d("PRODUCT", "ERROR : PRODUCT")
+        }
+        ProductState.Loading -> {
+            Log.d("PRODUCT", "LOADING : PRODUCT")
+        }
+        is ProductState.Success -> {
+            val productList = (productState.value as ProductState.Success).product
+            Log.d("PRODUCT","SUCCESS : $productList")
+        }
+    }
     Box(modifier = Modifier.fillMaxSize()) {
 
         Column(
@@ -204,9 +219,14 @@ fun CategoryItem(categoryModel: CategoryModel) {
 
     Log.d("CATEGORYITEM","${categoryModel.imageUrl}")
     val painter = rememberAsyncImagePainter(R.drawable.loading)
+    val error = rememberAsyncImagePainter(model = R.drawable.process_error)
     AsyncImage(
-       model = categoryModel.imageUrl,
+       model = ImageRequest.Builder(LocalContext.current)
+           .data(categoryModel.imageUrl)
+           .setHeader("User-Agent", "Mozilla/5.0")
+           .build(),
         placeholder = painter,
+        error = error,
         contentDescription = "Categories",
         contentScale = ContentScale.Inside,
         modifier = Modifier.size(55.dp)

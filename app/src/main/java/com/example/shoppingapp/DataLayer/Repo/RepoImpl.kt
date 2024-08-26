@@ -4,13 +4,11 @@ import android.util.Log
 import com.example.shoppingapp.CommonState.ResultState
 import com.example.shoppingapp.DomainLayer.Model.CategoryModel
 import com.example.shoppingapp.DomainLayer.Model.LoginModel
+import com.example.shoppingapp.DomainLayer.Model.ProductModel
 import com.example.shoppingapp.DomainLayer.Model.SignUpModel
 import com.example.shoppingapp.DomainLayer.Model.UserParentData
 import com.example.shoppingapp.DomainLayer.Repo.Repository
-import com.google.firebase.Firebase
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.auth.auth
-import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.getField
 import kotlinx.coroutines.cancel
@@ -130,6 +128,45 @@ class RepoImpl @Inject constructor(
         }
         awaitClose {
             close()
+        }
+    }
+
+    override fun getProduct(): Flow<ResultState<List<ProductModel>>> {
+        return callbackFlow {
+
+            trySend(ResultState.Loading())
+            firebaseFirestore.collection("PRODUCT").get().addOnSuccessListener {
+                val productList = mutableListOf<ProductModel>()
+                for (document in it.documents){
+                    val id = document.getField<String>("id")
+                    val name = document.getField<String>("name")
+                    val image = document.getField<String>("imageUrl")
+                    val description = document.getField<String>("description")
+                    val category = document.getField<String>("category")
+
+                    val actualPrice = document.get("actualPrice")
+                    val discountedPrice = document.get("discountedPrice")
+                    val discount = document.get("discountPercentage")
+
+                    val color = document.getField<ArrayList<String>>("color")
+                    val size = document.get("Size")
+
+
+                    if (id!=null && name!=null && description!=null&&category!=null&&actualPrice!=null&&discountedPrice!= null&&discount!=null){
+
+                        Log.d("PRODUCTDATA","$color , $size")
+//                        productList.add(ProductModel(id,name,description,image!!,actualPrice,discountedPrice,discount))
+                    }
+                }
+                Log.d("PRODUCTDATA","$productList")
+                trySend(ResultState.Success(productList))
+            }.addOnFailureListener {
+                trySend(ResultState.Error(it.message.toString()))
+                Log.d("PRODUCTDATA","${it.message}")
+            }
+            awaitClose{
+                close()
+            }
         }
     }
 }
