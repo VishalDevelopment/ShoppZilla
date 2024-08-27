@@ -8,5 +8,6 @@ data class ProductModel(
     val actualPrice: Any? =0,
     val discountedPrice:Any? =0,
     val discount:Any? =0,
-    val color :List<String>
+    val color: List<String> = emptyList(),
+    val size: List<String> =  emptyList()
     )

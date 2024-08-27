@@ -1,8 +1,9 @@
 package com.example.shoppingapp.UiLayer.Screens
 
 import android.util.Log
+import android.widget.Toast
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Box
@@ -44,26 +45,32 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.Placeholder
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
 import coil.compose.rememberAsyncImagePainter
 import coil.request.ImageRequest
 import com.example.shoppingapp.DomainLayer.Model.CategoryModel
+import com.example.shoppingapp.DomainLayer.Model.ProductModel
 import com.example.shoppingapp.R
+import com.example.shoppingapp.UiLayer.Navigation.Routes
 import com.example.shoppingapp.UiLayer.ViewModel.CategoryState
 import com.example.shoppingapp.UiLayer.ViewModel.ProductState
 import com.example.shoppingapp.UiLayer.ViewModel.ShoppingVm
 import com.example.shoppingapp.ui.theme.Pink80
+import okhttp3.Route
 
 @Composable
-fun HomeScreen() {
+fun HomeScreen(navController: NavHostController) {
     val categoryData = remember{ mutableStateOf(emptyList<CategoryModel>()) }
+    var productData = remember {
+        mutableStateOf(emptyList<ProductModel>())
+    }
     val viewmodel: ShoppingVm = hiltViewModel()
     LaunchedEffect(key1 = Unit) {
         viewmodel.getCategory()
@@ -95,6 +102,7 @@ fun HomeScreen() {
         }
         is ProductState.Success -> {
             val productList = (productState.value as ProductState.Success).product
+            productData.value = productList
             Log.d("PRODUCT","SUCCESS : $productList")
         }
     }
@@ -113,7 +121,7 @@ fun HomeScreen() {
             Category(categoryData)
             Spacer(modifier = Modifier.padding(vertical = 5.dp))
             OptionHead(title = "Flash Sale", moreData = "See More")
-            ShoppingList()
+            ShoppingList(productData.value,navController)
         }
 
     }
@@ -244,43 +252,12 @@ data class ShoppingDescription(
 )
 
 @Composable
-fun ShoppingList() {
-    val dressDescription = listOf(
-        ShoppingDescription(
-            R.drawable.dress1,
-            "One Shoulder Linen Dress",
-            "GF1025",
-            "Rs: 5740",
-            "Rs: 7180",
-            "20% off"
-        ),
-        ShoppingDescription(
-            R.drawable.dress2,
-            "Puff Sleeve Dress",
-            "GF1047",
-            "Rs: 5270",
-            "Rs: 6200",
-            "15% off"
-        ),
-        ShoppingDescription(
-            R.drawable.dress3, "One Shoulder Linen Dress",
-            "GF1025",
-            "Rs: 5740",
-            "Rs: 7180",
-            "20% off"
-        ),
-        ShoppingDescription(
-            R.drawable.dress4,
-            "Puff Sleeve Dress",
-            "GF1047",
-            "Rs: 5270",
-            "Rs: 6200",
-            "15% off"
-        )
-    )
+fun ShoppingList(product: List<ProductModel>, navController: NavHostController) {
+    val dressDescription = product
+Log.d("SHOPPINGLIST","$dressDescription")
     LazyRow {
         items(dressDescription) {
-            DressImage(it)
+            DressImage(it,navController)
             Box(modifier = Modifier.padding(vertical = 20.dp))
         }
     }
@@ -288,18 +265,33 @@ fun ShoppingList() {
 
 
 @Composable
-fun DressImage(dress: ShoppingDescription) {
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+fun DressImage(dress: ProductModel, navController: NavHostController) {
+    val painter = rememberAsyncImagePainter(R.drawable.loading)
+    val error = rememberAsyncImagePainter(model = R.drawable.process_error)
+    Log.d("IMAGEPRODUCT","${dress.imageUrl}")
+    val Context = LocalContext.current
+    Column(horizontalAlignment = Alignment.CenterHorizontally,modifier =Modifier.clickable {
+        // Navigate to Product Screen
+        Toast.makeText(Context, "Product Name : ${dress.name}", Toast.LENGTH_SHORT).show()
+        navController.navigate(Routes.ProductDetail(dress.id))
+
+    }) {
         Card(
             modifier = Modifier
                 .height(250.dp)
                 .width(150.dp)
                 .padding(vertical = 15.dp, horizontal = 5.dp), shape = RoundedCornerShape(25.dp)
         ) {
-            Image(
-                painter = painterResource(id = dress.dressImg),
+
+           AsyncImage(
+               model = ImageRequest.Builder(LocalContext.current)
+                   .data(dress.imageUrl)
+                   .setHeader("User-Agent", "Mozilla/5.0")
+                   .build(),
                 contentDescription = null,
-                Modifier.fillMaxSize(), contentScale = ContentScale.Crop
+                Modifier.fillMaxSize(), contentScale = ContentScale.Crop,
+               placeholder = painter,
+               error = error
             )
         }
         Card(
@@ -317,34 +309,34 @@ fun DressImage(dress: ShoppingDescription) {
                     .padding(5.dp)
             ) {
                 Text(
-                    text = dress.ProductName,
+                    text = dress.name,
                     modifier = Modifier
                         .padding(vertical = 5.dp)
                         .fillMaxWidth(),
-                    fontSize = 18.sp, textAlign = TextAlign.Center
+                    fontSize = 12.sp, textAlign = TextAlign.Center
                 )
                 Text(
-                    text = dress.ProductModel,
+                    text = "Test",
                     modifier = Modifier.padding(vertical = 5.dp, horizontal = 5.dp),
-                    fontSize = 15.sp
+                    fontSize = 10.sp
                 )
                 Text(
-                    text = dress.ProductPrice,
+                    text ="Rs ${ dress.discountedPrice }",
                     modifier = Modifier.padding(horizontal = 5.dp),
-                    fontSize = 13.sp
+                    fontSize = 10.sp
                 )
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = dress.ProductDiscountedPrice,
+                        text ="Rs ${ dress.actualPrice.toString() }",
                         textDecoration = TextDecoration.LineThrough,
                         modifier = Modifier.padding(vertical = 5.dp, horizontal = 5.dp),
                         fontSize = 15.sp
                     )
                     Text(
-                        text = dress.ProductDiscountPercentage, fontSize = 15.sp, color = Pink80
+                        text = "${dress.discount}%", fontSize = 15.sp, color = Pink80
                     )
                 }
             }

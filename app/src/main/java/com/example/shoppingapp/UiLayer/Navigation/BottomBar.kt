@@ -31,8 +31,10 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.toRoute
 import com.example.shoppingapp.UiLayer.Screens.CartScreen
 import com.example.shoppingapp.UiLayer.Screens.HomeScreen
+import com.example.shoppingapp.UiLayer.Screens.ProductScreen
 import com.example.shoppingapp.UiLayer.Screens.ProfileScreen
 import com.example.shoppingapp.UiLayer.Screens.WishlistScreen
 import com.example.shoppingapp.ui.theme.LitePink
@@ -100,13 +102,17 @@ fun BottomBar(firebaseAuth: FirebaseAuth,MainNavHost:NavHostController) {
         Box(modifier = Modifier.padding(it)) {
             NavHost(navController = navController, startDestination = selectedItem.navigate) {
                 composable<Routes.Home> {
-                    HomeScreen()
+                    HomeScreen(navController)
                 }
                 composable<Routes.Wishlist> {
                     WishlistScreen()
                 }
                 composable<Routes.Cart> {
                     CartScreen()
+                }
+                composable<Routes.ProductDetail>{
+                  val  productId = it.toRoute<Routes.ProductDetail>()
+                    ProductScreen(productId.productId)
                 }
                 composable<Routes.Profile> {
                     ProfileScreen(firebaseAuth = firebaseAuth){
@@ -116,7 +122,6 @@ fun BottomBar(firebaseAuth: FirebaseAuth,MainNavHost:NavHostController) {
                                 }
                             }
                         }
-
                 }
             }
         }

@@ -46,7 +46,7 @@ import androidx.compose.ui.unit.sp
 import com.example.shoppingapp.R
 
 @Composable
-//@Preview(showSystemUi = true)
+@Preview(showSystemUi = true)
 fun CartScreen() {
     Box(modifier = Modifier.fillMaxSize()) {
         Box(contentAlignment = Alignment.TopEnd, modifier = Modifier.fillMaxWidth()) {

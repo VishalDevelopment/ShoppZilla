@@ -16,4 +16,5 @@ interface Repository {
 
     fun getCategory():kotlinx.coroutines.flow.Flow<ResultState<List<CategoryModel>>>
     fun getProduct():kotlinx.coroutines.flow.Flow<ResultState<List<ProductModel>>>
+    fun getSpecificProduct(productId:String):kotlinx.coroutines.flow.Flow<ResultState<ProductModel>>
 }

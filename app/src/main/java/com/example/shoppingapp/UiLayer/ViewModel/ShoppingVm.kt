@@ -13,6 +13,7 @@ import com.example.shoppingapp.DomainLayer.UseCase.LoginUserUseCase
 import com.example.shoppingapp.DomainLayer.UseCase.RegisterUserUserCase
 import com.example.shoppingapp.DomainLayer.UseCase.getCategoryUseCase
 import com.example.shoppingapp.DomainLayer.UseCase.getProductUseCase
+import com.example.shoppingapp.DomainLayer.UseCase.getSpecificProductUseCase
 import com.example.shoppingapp.DomainLayer.UseCase.getUserByidUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -29,6 +30,7 @@ class ShoppingVm @Inject constructor(
     private val getuserUserUseCase: getUserByidUseCase,
     private val getCategoryUseCase: getCategoryUseCase,
     private val getProductUseCase: getProductUseCase,
+    private val getSpecificProductUseCase: getSpecificProductUseCase
 ) : ViewModel() {
 
     val _signupState = MutableStateFlow(SignupScreenState())
@@ -153,6 +155,31 @@ class ShoppingVm @Inject constructor(
         }
     }
 
+    private val _productdata = MutableStateFlow<SpecificProduct>(SpecificProduct.Loading)
+    val productdata = _productdata
+    fun getSpecificProduct(productID:String){
+        viewModelScope.launch {
+            getSpecificProductUseCase.getSpecificProduct(productID).collectLatest {
+                when(it){
+                    is ResultState.Error -> {
+                        _productdata.value = SpecificProduct.Error(it.error)
+                    }
+                    is ResultState.Loading -> {
+                        _productdata.value = SpecificProduct.Loading
+                    }
+                    is ResultState.Success -> {
+                        _productdata.value = SpecificProduct.Success(it.data)
+                    }
+                }
+            }
+        }
+    }
+}
+
+sealed class SpecificProduct{
+    class Success(val product: ProductModel) : SpecificProduct()
+    class Error(message: String) : SpecificProduct()
+    object Loading :SpecificProduct()
 }
 
 sealed class ProductState {

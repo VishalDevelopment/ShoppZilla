@@ -148,14 +148,13 @@ class RepoImpl @Inject constructor(
                     val discountedPrice = document.get("discountedPrice")
                     val discount = document.get("discountPercentage")
 
-                    val color = document.getField<ArrayList<String>>("color")
-                    val size = document.get("Size")
+                    val color = document.get("color") as List<String>
+                    val size = document.get("Size") as List<String>
 
 
                     if (id!=null && name!=null && description!=null&&category!=null&&actualPrice!=null&&discountedPrice!= null&&discount!=null){
 
-                        Log.d("PRODUCTDATA","$color , $size")
-//                        productList.add(ProductModel(id,name,description,image!!,actualPrice,discountedPrice,discount))
+                        productList.add(ProductModel(id,name,description,image!!,actualPrice,discountedPrice,discount,color,size))
                     }
                 }
                 Log.d("PRODUCTDATA","$productList")
@@ -164,6 +163,26 @@ class RepoImpl @Inject constructor(
                 trySend(ResultState.Error(it.message.toString()))
                 Log.d("PRODUCTDATA","${it.message}")
             }
+            awaitClose{
+                close()
+            }
+        }
+    }
+
+    override fun getSpecificProduct(productId:String): Flow<ResultState<ProductModel>> {
+        return callbackFlow {
+            trySend(ResultState.Loading())
+            firebaseFirestore.collection("PRODUCT").document(productId).get().addOnSuccessListener {
+                val productData = it.toObject(ProductModel::class.java)
+                if (productData!=null){
+                    Log.d("REPOIMPL","$productData")
+                    trySend(ResultState.Success(productData))
+                }
+            }
+                .addOnFailureListener {
+                    Log.d("REPOIMPL","${it.message}")
+                    trySend(ResultState.Error(it.message.toString()))
+                }
             awaitClose{
                 close()
             }

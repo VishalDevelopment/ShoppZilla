@@ -18,8 +18,9 @@ sealed class Routes(val route:String){
     object Wishlist
     @Serializable
     object Profile
+
     @Serializable
-    object ProductDetail
+    data class ProductDetail(val productId: String)
     @Serializable
     object Checkout
     @Serializable
