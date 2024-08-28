@@ -253,6 +253,7 @@ data class ShoppingDescription(
 
 @Composable
 fun ShoppingList(product: List<ProductModel>, navController: NavHostController) {
+
     val dressDescription = product
 Log.d("SHOPPINGLIST","$dressDescription")
     LazyRow {
@@ -266,6 +267,7 @@ Log.d("SHOPPINGLIST","$dressDescription")
 
 @Composable
 fun DressImage(dress: ProductModel, navController: NavHostController) {
+
     val painter = rememberAsyncImagePainter(R.drawable.loading)
     val error = rememberAsyncImagePainter(model = R.drawable.process_error)
     Log.d("IMAGEPRODUCT","${dress.imageUrl}")

@@ -1,6 +1,8 @@
 package com.example.shoppingapp.DataLayer.Repo
 
 import android.util.Log
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.mutableStateOf
 import com.example.shoppingapp.CommonState.ResultState
 import com.example.shoppingapp.DomainLayer.Model.CategoryModel
 import com.example.shoppingapp.DomainLayer.Model.LoginModel
@@ -146,15 +148,15 @@ class RepoImpl @Inject constructor(
 
                     val actualPrice = document.get("actualPrice")
                     val discountedPrice = document.get("discountedPrice")
-                    val discount = document.get("discountPercentage")
+                    val discount = document.get("discountedPercentage")
 
-                    val color = document.get("color") as List<String>
-                    val size = document.get("Size") as List<String>
+                    val color = document.get("color")
+                    val size = document.get("Size")
 
 
                     if (id!=null && name!=null && description!=null&&category!=null&&actualPrice!=null&&discountedPrice!= null&&discount!=null){
-
                         productList.add(ProductModel(id,name,description,image!!,actualPrice,discountedPrice,discount,color,size))
+
                     }
                 }
                 Log.d("PRODUCTDATA","$productList")
@@ -173,10 +175,24 @@ class RepoImpl @Inject constructor(
         return callbackFlow {
             trySend(ResultState.Loading())
             firebaseFirestore.collection("PRODUCT").document(productId).get().addOnSuccessListener {
-                val productData = it.toObject(ProductModel::class.java)
-                if (productData!=null){
-                    Log.d("REPOIMPL","$productData")
-                    trySend(ResultState.Success(productData))
+                var product :ProductModel? = null
+                val id = it.getField<String>("id")
+                val name = it.getField<String>("name")
+                val image = it.getField<String>("imageUrl")
+                val description = it.getField<String>("description")
+                val category = it.getField<String>("category")
+
+                val actualPrice = it.get("actualPrice")
+                val discountedPrice = it.get("discountedPrice")
+                val discount =it.get("discountedPercentage")
+
+                val color = it.get("color")
+                val size = it.get("Size")
+                if (id!=null && name!=null && description!=null&&category!=null&&actualPrice!=null&&discountedPrice!= null&&discount!=null){
+
+                    product = ProductModel(id,name,description,image!!,actualPrice,discountedPrice,discount,color,size)
+                    Log.d("SINGLEPRO","$product")
+                    trySend(ResultState.Success(product))
                 }
             }
                 .addOnFailureListener {
