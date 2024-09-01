@@ -1,22 +1,24 @@
 package com.example.shoppingapp.DataLayer.Repo
 
 import android.util.Log
-import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.mutableStateOf
 import com.example.shoppingapp.CommonState.ResultState
+import com.example.shoppingapp.DomainLayer.Model.CartModel
 import com.example.shoppingapp.DomainLayer.Model.CategoryModel
 import com.example.shoppingapp.DomainLayer.Model.LoginModel
 import com.example.shoppingapp.DomainLayer.Model.ProductModel
 import com.example.shoppingapp.DomainLayer.Model.SignUpModel
+import com.example.shoppingapp.DomainLayer.Model.TestModel
 import com.example.shoppingapp.DomainLayer.Model.UserParentData
 import com.example.shoppingapp.DomainLayer.Repo.Repository
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.getField
+import com.google.firebase.firestore.toObject
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
+import java.util.UUID
 import javax.inject.Inject
 
 class RepoImpl @Inject constructor(
@@ -60,7 +62,6 @@ class RepoImpl @Inject constructor(
             close()
         }
     }
-
 
     override fun loginUser(loginModel: LoginModel): Flow<ResultState<String>> = callbackFlow {
         firebase.signInWithEmailAndPassword(loginModel.email, loginModel.password)
@@ -107,25 +108,25 @@ class RepoImpl @Inject constructor(
     override fun getCategory(): Flow<ResultState<List<CategoryModel>>> = callbackFlow {
         trySend(ResultState.Loading())
         firebaseFirestore.collection("CATEGORY").get().addOnSuccessListener {
-            if (it!=null) {
+            if (it != null) {
                 val categoryList = mutableListOf<CategoryModel>()
-                for (document in it.documents){
+                for (document in it.documents) {
                     val id = document.getField<String>("id")
                     val name = document.getField<String>("name")
-                    val  imageUrl = document.getField<String>("imageUrl")
+                    val imageUrl = document.getField<String>("imageUrl")
 //                    Log.d("CATEGORYDOCREPO "," ${document} ")
-                    Log.d("CATEGORYDOCDATAOUT "," ${id} && ${name} && ${imageUrl} ")
+                    Log.d("CATEGORYDOCDATAOUT ", " ${id} && ${name} && ${imageUrl} ")
                     if (id != null && name != null && imageUrl != null) {
-                        Log.d("CATEGORYDOCDATAIN "," ${id} && ${name} && ${imageUrl} ")
+                        Log.d("CATEGORYDOCDATAIN ", " ${id} && ${name} && ${imageUrl} ")
                         categoryList.add(CategoryModel(id, name, imageUrl))
                     }
                 }
-                Log.d("CATEGORYRPEO"," $categoryList")
+                Log.d("CATEGORYRPEO", " $categoryList")
                 trySend(ResultState.Success(categoryList))
             }
         }.addOnFailureListener {
-                if (it.message!=null) {
-                    trySend(ResultState.Error(it.message.toString()))
+            if (it.message != null) {
+                trySend(ResultState.Error(it.message.toString()))
             }
         }
         awaitClose {
@@ -139,7 +140,7 @@ class RepoImpl @Inject constructor(
             trySend(ResultState.Loading())
             firebaseFirestore.collection("PRODUCT").get().addOnSuccessListener {
                 val productList = mutableListOf<ProductModel>()
-                for (document in it.documents){
+                for (document in it.documents) {
                     val id = document.getField<String>("id")
                     val name = document.getField<String>("name")
                     val image = document.getField<String>("imageUrl")
@@ -154,54 +155,97 @@ class RepoImpl @Inject constructor(
                     val size = document.get("Size")
 
 
-                    if (id!=null && name!=null && description!=null&&category!=null&&actualPrice!=null&&discountedPrice!= null&&discount!=null){
-                        productList.add(ProductModel(id,name,description,image!!,actualPrice,discountedPrice,discount,color,size))
+                    if (id != null && name != null && description != null && category != null && actualPrice != null && discountedPrice != null && discount != null) {
+                        productList.add(
+                            ProductModel(
+                                id,
+                                name,
+                                description,
+                                image!!,
+                                actualPrice,
+                                discountedPrice,
+                                discount,
+                                color,
+                                size
+                            )
+                        )
 
                     }
                 }
-                Log.d("PRODUCTDATA","$productList")
+                Log.d("PRODUCTDATA", "$productList")
                 trySend(ResultState.Success(productList))
             }.addOnFailureListener {
                 trySend(ResultState.Error(it.message.toString()))
-                Log.d("PRODUCTDATA","${it.message}")
+                Log.d("PRODUCTDATA", "${it.message}")
             }
-            awaitClose{
+            awaitClose {
                 close()
             }
         }
     }
 
-    override fun getSpecificProduct(productId:String): Flow<ResultState<ProductModel>> {
+    override fun getSpecificProduct(productId: String): Flow<ResultState<TestModel>> {
         return callbackFlow {
+
+
             trySend(ResultState.Loading())
             firebaseFirestore.collection("PRODUCT").document(productId).get().addOnSuccessListener {
-                var product :ProductModel? = null
-                val id = it.getField<String>("id")
-                val name = it.getField<String>("name")
-                val image = it.getField<String>("imageUrl")
-                val description = it.getField<String>("description")
-                val category = it.getField<String>("category")
 
-                val actualPrice = it.get("actualPrice")
-                val discountedPrice = it.get("discountedPrice")
-                val discount =it.get("discountedPercentage")
+                val productData = it.toObject(TestModel::class.java)
+                if (productData != null) {
+                    Log.d("FIREPRODUCT", "$productData")
+                    trySend(ResultState.Success(productData))
 
-                val color = it.get("color")
-                val size = it.get("Size")
-                if (id!=null && name!=null && description!=null&&category!=null&&actualPrice!=null&&discountedPrice!= null&&discount!=null){
-
-                    product = ProductModel(id,name,description,image!!,actualPrice,discountedPrice,discount,color,size)
-                    Log.d("SINGLEPRO","$product")
-                    trySend(ResultState.Success(product))
                 }
+//                }
             }
                 .addOnFailureListener {
-                    Log.d("REPOIMPL","${it.message}")
+                    Log.d("REPOIMPL", "${it.message}")
                     trySend(ResultState.Error(it.message.toString()))
                 }
-            awaitClose{
+            awaitClose {
                 close()
             }
         }
     }
+
+    override fun AddToCart(uid: String, cartModel: CartModel): Flow<ResultState<String>> {
+//        val UniqueId = UUID.randomUUID().toString()
+        return callbackFlow {
+            trySend(ResultState.Loading())
+            firebaseFirestore.collection("CART").document(uid).collection("CARTITEMS")
+                .add(cartModel).addOnSuccessListener {
+                trySend(ResultState.Success("Added to Cart !!"))
+            }
+                .addOnFailureListener {
+                  trySend(ResultState.Error("Error"))
+                }
+            awaitClose {
+                close()
+            }
+        }
+    }
+    override fun GetToCart(uid: String): Flow<ResultState<List<CartModel>>> = callbackFlow {
+      trySend(ResultState.Loading())
+        firebaseFirestore.collection("CART").document(uid).collection("CARTITEMS")
+            .get().addOnSuccessListener { documents ->
+                val cartItem = mutableListOf<CartModel>()
+                for(document in documents){
+                    val data = document.toObject(CartModel::class.java)
+                    if (data!=null){
+                       cartItem.add(data)
+                    }
+                }
+                Log.d("ALLCARTITEM","$cartItem")
+                trySend(ResultState.Success(cartItem))
+        }
+            .addOnFailureListener {
+                trySend(ResultState.Error(it.message.toString()))
+                Log.d("GETCART","${it.message}")
+            }
+        awaitClose {
+            close()
+        }
+    }
+
 }

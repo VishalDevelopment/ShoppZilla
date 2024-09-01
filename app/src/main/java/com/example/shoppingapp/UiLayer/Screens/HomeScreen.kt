@@ -111,7 +111,7 @@ fun HomeScreen(navController: NavHostController) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(top = 8.dp)
+//                .padding(top = 8.dp)
                 .verticalScroll(rememberScrollState())
         ) {
             SearchBar()
@@ -190,8 +190,6 @@ fun SearchBar() {
 @Composable
 fun Category(categoryData: MutableState<List<CategoryModel>>) {
 
-    val CategoryImg =
-        listOf(categoryData.value, R.drawable.underwear, R.drawable.jeans, R.drawable.t_shirt)
 
     LazyRow(
         modifier = Modifier
@@ -224,6 +222,7 @@ fun Category(categoryData: MutableState<List<CategoryModel>>) {
 
 @Composable
 fun CategoryItem(categoryModel: CategoryModel) {
+
 
     Log.d("CATEGORYITEM","${categoryModel.imageUrl}")
     val painter = rememberAsyncImagePainter(R.drawable.loading)
@@ -272,6 +271,9 @@ fun DressImage(dress: ProductModel, navController: NavHostController) {
     val error = rememberAsyncImagePainter(model = R.drawable.process_error)
     Log.d("IMAGEPRODUCT","${dress.imageUrl}")
     val Context = LocalContext.current
+
+
+
     Column(horizontalAlignment = Alignment.CenterHorizontally,modifier =Modifier.clickable {
         // Navigate to Product Screen
         Toast.makeText(Context, "Product Name : ${dress.name}", Toast.LENGTH_SHORT).show()

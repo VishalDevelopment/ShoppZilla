@@ -1,4 +1,4 @@
-package com.example.shoppingapp.UiLayer.Screens
+package com.example.shoppingapp.UiLayer.Screens.Profile_Screen
 
 import android.util.Log
 import android.widget.Toast
@@ -50,11 +50,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.example.shoppingapp.DomainLayer.Model.SignUpModel
-import com.example.shoppingapp.DomainLayer.Model.UserParentData
 import com.example.shoppingapp.R
 import com.example.shoppingapp.UiLayer.ViewModel.ShoppingVm
-import com.example.shoppingapp.UiLayer.ViewModel.UserDetailState
 import com.example.shoppingapp.ui.theme.Pink80
 import com.google.firebase.auth.FirebaseAuth
 
@@ -66,15 +63,15 @@ var isDialog by mutableStateOf(false)
 @Composable
 
 fun ProfileScreen(
-    firebaseAuth: FirebaseAuth, viewmodel: ShoppingVm = hiltViewModel(),
+    firebaseAuth: FirebaseAuth,
     navHostController: () -> Unit,
 ) {
-
+    val ProfileVM :ProfileViewModel = hiltViewModel()
     val uid = firebaseAuth.uid.toString()
    LaunchedEffect (key1=true){
-       viewmodel.userProfileData(uid)
+       ProfileVM.userProfileData(uid)
    }
-    val state = viewmodel.userdata.collectAsState()
+    val state = ProfileVM.userdata.collectAsState()
 
     var fname by remember { mutableStateOf("") }
     var lname by remember { mutableStateOf("") }
@@ -146,7 +143,7 @@ fun ProfileScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(30.dp)
+                .padding(horizontal = 30.dp)
                 .verticalScroll(rememberScrollState()),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center

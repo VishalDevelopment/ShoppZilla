@@ -32,10 +32,10 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
-import com.example.shoppingapp.UiLayer.Screens.CartScreen
+import com.example.shoppingapp.UiLayer.Screens.Cart_Screen.CartScreen
 import com.example.shoppingapp.UiLayer.Screens.HomeScreen
 import com.example.shoppingapp.UiLayer.Screens.ProductScreen
-import com.example.shoppingapp.UiLayer.Screens.ProfileScreen
+import com.example.shoppingapp.UiLayer.Screens.Profile_Screen.ProfileScreen
 import com.example.shoppingapp.UiLayer.Screens.WishlistScreen
 import com.example.shoppingapp.ui.theme.LitePink
 import com.example.shoppingapp.ui.theme.Pink80
@@ -108,11 +108,11 @@ fun BottomBar(firebaseAuth: FirebaseAuth,MainNavHost:NavHostController) {
                     WishlistScreen()
                 }
                 composable<Routes.Cart> {
-                    CartScreen()
+                    CartScreen(firebaseAuth)
                 }
                 composable<Routes.ProductDetail>{
                   val  productId = it.toRoute<Routes.ProductDetail>()
-                    ProductScreen(productId.productId)
+                    ProductScreen(productId.productId, firebaseAuth)
                 }
                 composable<Routes.Profile> {
                     ProfileScreen(firebaseAuth = firebaseAuth){

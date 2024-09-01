@@ -16,7 +16,9 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.KeyboardArrowLeft
 import androidx.compose.material3.Card
@@ -39,22 +41,22 @@ import androidx.compose.ui.unit.sp
 import com.example.shoppingapp.R
 
 @Composable
-@Preview(showSystemUi = true)
+//@Preview(showSystemUi = true)
 fun WishlistScreen() {
 
-    Box(modifier = Modifier.fillMaxSize()) {
-        Column(
-            modifier = Modifier
-                .padding(horizontal = 5.dp)
-                .padding(top = 50.dp)
+    Box(modifier = Modifier
+        .fillMaxSize()
+        .padding(horizontal = 5.dp)
         ) {
+        Column(modifier = Modifier
+            .fillMaxSize()){
             Text(
                 text = "Wishlist",
                 color = Color.Black,
                 fontWeight = FontWeight.Black,
                 fontSize = 25.sp
             )
-            Spacer(modifier = Modifier.height(10.dp))
+            Spacer(modifier = Modifier.height(5.dp))
             Row(modifier = Modifier.height(40.dp), verticalAlignment = Alignment.CenterVertically) {
                 Image(
                     imageVector = Icons.Default.KeyboardArrowLeft,
@@ -91,13 +93,14 @@ fun WishlistItemList() {
             "Rs: 7180",
             "20% off"
         ),
+
         ShoppingDescription(
-            R.drawable.dress2,
-            "Puff Sleeve Dress",
-            "GF1047",
-            "Rs: 5270",
-            "Rs: 6200",
-            "15% off"
+            R.drawable.dress1,
+            "One Shoulder Linen Dress",
+            "GF1025",
+            "Rs: 5740",
+            "Rs: 7180",
+            "20% off"
         ),
         ShoppingDescription(
             R.drawable.dress1,
