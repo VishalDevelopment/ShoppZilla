@@ -8,6 +8,7 @@ import com.example.shoppingapp.DomainLayer.Model.ProductModel
 import com.example.shoppingapp.DomainLayer.Model.SignUpModel
 import com.example.shoppingapp.DomainLayer.Model.TestModel
 import com.example.shoppingapp.DomainLayer.Model.UserParentData
+import kotlinx.coroutines.flow.Flow
 
 interface Repository {
     fun registerUser(signUpModel: SignUpModel):kotlinx.coroutines.flow.Flow<ResultState<String>>
@@ -22,5 +23,7 @@ interface Repository {
     fun GetToCart(uid: String):kotlinx.coroutines.flow.Flow<ResultState<List<CartModel>>>
 
     fun AddtoWishlist(uid:String,cartModel: CartModel):kotlinx.coroutines.flow.Flow<ResultState<String>>
-//    fun GettoWishlist(uid:String,cartModel: CartModel):kotlinx.coroutines.flow.Flow<ResultState<Boolean>>
+    fun GettoWishlist(uid:String,productId: String):kotlinx.coroutines.flow.Flow<ResultState<Boolean>>
+    fun RemoveToWishlist(uid:String , productId: String)
+    fun AllWishList (uid: String):Flow<ResultState<List<CartModel>>>
 }

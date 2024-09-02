@@ -1,5 +1,6 @@
 package com.example.shoppingapp.UiLayer.Screens.Wishlist_Screen
 
+import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -22,6 +23,11 @@ import androidx.compose.material.icons.filled.KeyboardArrowLeft
 import androidx.compose.material3.Card
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -34,13 +40,40 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.shoppingapp.R
-import com.example.shoppingapp.UiLayer.Screens.ShoppingDescription
+import androidx.hilt.navigation.compose.hiltViewModel
+import coil.compose.AsyncImage
+import com.example.shoppingapp.DomainLayer.Model.CartModel
+import com.google.firebase.auth.FirebaseAuth
 
 @Composable
 //@Preview(showSystemUi = true)
-fun WishlistScreen() {
+fun WishlistScreen(firebaseAuth: FirebaseAuth) {
 
+    //UserID
+    val userId = firebaseAuth.uid.toString()
+    //ViewModel
+    val WISHLISTVM :WishlistViewModel = hiltViewModel()
+    LaunchedEffect ( key1 = Unit ){
+        WISHLISTVM.AllWishListItem(userId)
+    }
+    val WishListState = WISHLISTVM.CompleteWishList.collectAsState()
+    val WishList = remember {
+        mutableStateOf<List<CartModel>>(emptyList())
+    }
+    when(WishListState.value){
+        is CompleteWishListState.Error -> {
+            Log.d("WISHLISTSCREEN","ERR : ")
+        }
+       is CompleteWishListState.Loading -> {
+           Log.d("WISHLISTSCREEN","LOAD : ")
+
+       }
+        is CompleteWishListState.Success -> {
+            val wishlist = (WishListState.value as CompleteWishListState.Success).wishlist
+            WishList.value = wishlist
+            Log.d("WISHLISTSCREEN","SUCCESS : $wishlist")
+        }
+    }
     Box(modifier = Modifier
         .fillMaxSize()
         .padding(horizontal = 5.dp)
@@ -71,61 +104,18 @@ fun WishlistScreen() {
                     fontSize = 20.sp
                 )
             }
-            WishlistItemList()
+            WishlistItemList(WishList)
         }
     }
 }
 
 @Composable
-fun WishlistItemList() {
+fun WishlistItemList(WishList: MutableState<List<CartModel>>) {
 
     val FontSize = 15.sp
-    
-    val dressDescription = listOf(
-        ShoppingDescription(
-            R.drawable.dress1,
-            "One Shoulder Linen Dress",
-            "GF1025",
-            "Rs: 5740",
-            "Rs: 7180",
-            "20% off"
-        ),
 
-        ShoppingDescription(
-            R.drawable.dress1,
-            "One Shoulder Linen Dress",
-            "GF1025",
-            "Rs: 5740",
-            "Rs: 7180",
-            "20% off"
-        ),
-        ShoppingDescription(
-            R.drawable.dress1,
-            "One Shoulder Linen Dress",
-            "GF1025",
-            "Rs: 5740",
-            "Rs: 7180",
-            "20% off"
-        ),
-        ShoppingDescription(
-            R.drawable.dress1,
-            "One Shoulder Linen Dress",
-            "GF1025",
-            "Rs: 5740",
-            "Rs: 7180",
-            "20% off"
-        ),
-        ShoppingDescription(
-            R.drawable.dress1,
-            "One Shoulder Linen Dress",
-            "GF1025",
-            "Rs: 5740",
-            "Rs: 7180",
-            "20% off"
-        )
-    )
     LazyColumn (modifier = Modifier.fillMaxWidth()){
-        items(dressDescription){
+        items(WishList.value){
             Row(horizontalArrangement = Arrangement.SpaceAround,
                 modifier = Modifier
                     .fillMaxWidth()
@@ -139,8 +129,8 @@ fun WishlistItemList() {
                             .padding(horizontal = 5.dp),
                         shape = RoundedCornerShape(18.dp)
                     ) {
-                        Image(
-                            painter = painterResource(id = it.dressImg),
+                        AsyncImage(
+                          model = it.imageUrl,
                             contentDescription = null,
                             Modifier.fillMaxSize(), contentScale = ContentScale.Crop
                         )
@@ -150,27 +140,20 @@ fun WishlistItemList() {
                         modifier = Modifier.padding(top = 10.dp)
                     ) {
                         Text(
-                            text = it.ProductName,
+                            text = it.name,
                             modifier = Modifier
                                 .padding(vertical = 3.dp)
                                 .width(100.dp), fontSize = FontSize
                         )
-
                         Text(
-                            text = it.ProductModel,
-                            modifier = Modifier
-                                .padding(vertical = 3.dp),
-                            fontSize = FontSize
-                        )
-                        Text(
-                            text = "Size : UKB",
+                            text = "Size : ${it.size}",
                             modifier = Modifier
                                 .padding(vertical = 3.dp),
                             fontSize =FontSize
                         )
                         Row(verticalAlignment = Alignment.CenterVertically){
                             Text(
-                                text = it.ProductModel,
+                                text = it.id,
                                 modifier = Modifier
                                     .padding(vertical = 5.dp),
                                 fontSize = FontSize
@@ -180,14 +163,14 @@ fun WishlistItemList() {
                                 modifier = Modifier
                                     .size(10.dp)
                                     .clip(RectangleShape)
-                                    .background(Color.Red)
+                                    .background(Color(android.graphics.Color.parseColor(it.color)))
                             )
                         }
                     }
                 }
 
                 Text(
-                    text = it.ProductPrice,
+                    text =" ${it.price}",
                     fontSize = FontSize,
                     textAlign = TextAlign.Center,
                     modifier = Modifier

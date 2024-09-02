@@ -66,6 +66,7 @@ import com.example.shoppingapp.DomainLayer.Model.CartModel
 import com.example.shoppingapp.DomainLayer.Model.TestModel
 import com.example.shoppingapp.R
 import com.example.shoppingapp.UiLayer.Screens.Cart_Screen.CartViewModel
+import com.example.shoppingapp.UiLayer.Screens.Wishlist_Screen.WishListReceiveState
 import com.example.shoppingapp.UiLayer.Screens.Wishlist_Screen.WishlistViewModel
 import com.example.shoppingapp.UiLayer.ViewModel.ShoppingVm
 import com.example.shoppingapp.UiLayer.ViewModel.SpecificProduct
@@ -81,17 +82,40 @@ val quantity = mutableStateOf(0)
 @Composable
 fun ProductScreen(productId: String, firebaseAuth: FirebaseAuth) {
     val context = LocalContext.current
+    //ViewmModel
     val CartVM: CartViewModel = hiltViewModel()
-    val WishListVM :WishlistViewModel = hiltViewModel()
-    val userId =  firebaseAuth.uid.toString()
-    Log.d("PID", "$productId")
+    val WishListVM: WishlistViewModel = hiltViewModel()
     val viewmodel: ShoppingVm = hiltViewModel()
+
+    val userId = firebaseAuth.uid.toString()
     val productData = remember {
         mutableStateOf<TestModel>(TestModel())
     }
+
+    val checkWishlist = remember {
+        mutableStateOf(false)
+    }
+    val isWishlisted = WishListVM.isWishlistAvailable.collectAsState()
+    when (isWishlisted.value) {
+        is WishListReceiveState.Error -> {
+            Log.d("ISWISHLISTED", "ERR : ")
+        }
+
+        WishListReceiveState.Loading -> {
+            Log.d("ISWISHLISTED", "LOAD : ")
+
+        }
+
+        is WishListReceiveState.Success -> {
+            val isWishlist = (isWishlisted.value as WishListReceiveState.Success).isAvailable
+            checkWishlist.value = isWishlist
+        }
+    }
     LaunchedEffect(Unit) {
         viewmodel.getSpecificProduct(productId)
+        WishListVM.gettoWishlist(userId, productId)
     }
+
     val state = viewmodel.productdata.collectAsState()
     when (state.value) {
         is SpecificProduct.Error -> {
@@ -188,32 +212,40 @@ fun ProductScreen(productId: String, firebaseAuth: FirebaseAuth) {
                 Spacer(modifier = Modifier.height(5.dp))
                 ProductSize(productData.value.Size)
                 Spacer(modifier = Modifier.height(8.dp))
-                Box(modifier = Modifier
-                    .height(45.dp)
-                    .border(1.dp, Color.Black), contentAlignment = Alignment.Center){
-                    Row (){
+                Box(
+                    modifier = Modifier
+                        .height(45.dp)
+                        .border(1.dp, Color.Black), contentAlignment = Alignment.Center
+                ) {
+                    Row() {
 
-                        Image(imageVector = Icons.Default.Remove, contentDescription =null,modifier = Modifier
-                            .padding(5.dp)
-                            .fillMaxHeight()
-                            .clickable {
-                                if (quantity.value > 0) {
-                                    quantity.value = (quantity.value.toInt() - 1)
-                                }
-                            } )
-                        OutlinedTextField(readOnly = true,value = quantity.value.toString(), onValueChange ={
-                            quantity.value  = it.toInt()
-                        }, modifier = Modifier
-                            .width(50.dp)
-                            .height(45.dp) )
-                        Image(imageVector = Icons.Default.Add, contentDescription =null,modifier = Modifier
-                            .padding(5.dp)
-                            .fillMaxHeight()
-                            .clickable {
-                                if (quantity.value < 10) {
-                                    quantity.value = (quantity.value.toInt() + 1)
-                                }
-                            } )
+                        Image(imageVector = Icons.Default.Remove,
+                            contentDescription = null,
+                            modifier = Modifier
+                                .padding(5.dp)
+                                .fillMaxHeight()
+                                .clickable {
+                                    if (quantity.value > 0) {
+                                        quantity.value = (quantity.value.toInt() - 1)
+                                    }
+                                })
+                        OutlinedTextField(
+                            readOnly = true, value = quantity.value.toString(), onValueChange = {
+                                quantity.value = it.toInt()
+                            }, modifier = Modifier
+                                .width(50.dp)
+                                .height(45.dp)
+                        )
+                        Image(imageVector = Icons.Default.Add,
+                            contentDescription = null,
+                            modifier = Modifier
+                                .padding(5.dp)
+                                .fillMaxHeight()
+                                .clickable {
+                                    if (quantity.value < 10) {
+                                        quantity.value = (quantity.value.toInt() + 1)
+                                    }
+                                })
 
                     }
                 }
@@ -252,22 +284,29 @@ fun ProductScreen(productId: String, firebaseAuth: FirebaseAuth) {
                 OutlinedButton(
                     onClick = {
                         //  Cart Code
-                        if (addToCartClicked.value==1){
+                        if (addToCartClicked.value == 1) {
                             Toast.makeText(context, "Item Already Added", Toast.LENGTH_SHORT).show()
                         }
-                      if (colorSelected.value!="" && sizeSelectedImage.value!=""){
-                          CartVM.addtoCart(
-                              userId.toString(), CartModel(productData.value.id,productData.value.name,productData.value.imageUrl,productData.value.discountedPrice, quantity.value,colorSelected.value,sizeSelectedImage.value)
-                          )
-                      }
-
-                        else{
-                          Toast.makeText(
-                              context,
-                              "Please Select qunatity ,color And Size",
-                              Toast.LENGTH_SHORT
-                          ).show()
-                      }
+                        if (colorSelected.value != "" && sizeSelectedImage.value != "") {
+                            CartVM.addtoCart(
+                                userId.toString(),
+                                CartModel(
+                                    productData.value.id,
+                                    productData.value.name,
+                                    productData.value.imageUrl,
+                                    productData.value.discountedPrice,
+                                    quantity.value,
+                                    colorSelected.value,
+                                    sizeSelectedImage.value
+                                )
+                            )
+                        } else {
+                            Toast.makeText(
+                                context,
+                                "Please Select qunatity ,color And Size",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        }
                     },
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(15.dp),
@@ -277,30 +316,44 @@ fun ProductScreen(productId: String, firebaseAuth: FirebaseAuth) {
                 }
                 Spacer(modifier = Modifier.height(8.dp))
 
-                val stateCheck = remember {
-                    mutableStateOf(false)
-                }
-                Row (modifier= Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 8.dp)
-                    .clickable {
-                        WishListVM.addtoWishList(userId, CartModel(productData.value.id,productData.value.name,productData.value.imageUrl,productData.value.discountedPrice,
-                            quantity.value,
-                            colorSelected.value,
-                            sizeSelectedImage.value))
-                        if (stateCheck.value == true) {
-                            stateCheck.value = false
+
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 8.dp)
+                        .clickable {
+                            if (checkWishlist.value == true) {
+                                WishListVM.removetoWishlist(userId,productId)
+                                WishListVM.gettoWishlist(userId, productId)
+
+                            }
+                            else {
+                                WishListVM.addtoWishList(
+                                    userId, CartModel(
+                                        productData.value.id,
+                                        productData.value.name,
+                                        productData.value.imageUrl,
+                                        productData.value.discountedPrice,
+                                        quantity.value,
+                                        colorSelected.value,
+                                        sizeSelectedImage.value
+                                    ))
+                                WishListVM.gettoWishlist(userId, productId)
+
+
+                            }
+
+                        }, horizontalArrangement = Arrangement.Center
+                ) {
+                    Log.d("CHECKSTATE", "${checkWishlist.value}")
+                    Icon(
+                        imageVector = if (checkWishlist.value == true) {
+                            Icons.Default.Favorite
                         } else {
-                            stateCheck.value = true
-                        }
-                    }, horizontalArrangement = Arrangement.Center){
-                    Log.d("CHECKSTATE","${stateCheck.value}")
-                    Icon(imageVector =   if (stateCheck.value==true) {
-                        Icons.Default.Favorite
-                    } else {
-                        Icons.Default.FavoriteBorder
-                    } ,
-                        contentDescription =null, tint = Color.Black)
+                            Icons.Default.FavoriteBorder
+                        },
+                        contentDescription = null, tint = Color.Black
+                    )
                     Box(modifier = Modifier.width(3.dp))
                     Text(text = "Add to Wishlist")
                 }

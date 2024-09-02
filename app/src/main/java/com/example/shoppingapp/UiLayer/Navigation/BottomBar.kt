@@ -105,7 +105,7 @@ fun BottomBar(firebaseAuth: FirebaseAuth,MainNavHost:NavHostController) {
                     HomeScreen(navController)
                 }
                 composable<Routes.Wishlist> {
-                    WishlistScreen()
+                    WishlistScreen(firebaseAuth)
                 }
                 composable<Routes.Cart> {
                     CartScreen(firebaseAuth)

@@ -1,6 +1,7 @@
 package com.example.shoppingapp.DataLayer.Repo
 
 import android.util.Log
+import androidx.compose.runtime.mutableStateOf
 import com.example.shoppingapp.CommonState.ResultState
 import com.example.shoppingapp.DomainLayer.Model.CartModel
 import com.example.shoppingapp.DomainLayer.Model.CategoryModel
@@ -249,7 +250,7 @@ class RepoImpl @Inject constructor(
         }
     }
 
-    override fun AddtoWishlist(uid: String,cartModel: CartModel): Flow<ResultState<String>> {
+    override fun AddtoWishlist(uid: String, cartModel: CartModel): Flow<ResultState<String>> {
         return callbackFlow {
             trySend(ResultState.Loading())
             firebaseFirestore.collection("USERSPECIFIC").document(uid).collection("WISHLIST")
@@ -265,4 +266,59 @@ class RepoImpl @Inject constructor(
             }
         }
     }
+    override fun GettoWishlist(uid: String, productId: String): Flow<ResultState<Boolean>> {
+        return callbackFlow {
+            trySend(ResultState.Loading())
+            firebaseFirestore.collection("USERSPECIFIC").document(uid).collection("WISHLIST")
+                .get().addOnSuccessListener { documents ->
+                    val isavailable = mutableStateOf(false)
+                    for (document in documents) {
+                        if (document != null && productId == document.id) {
+                            isavailable.value = true
+                        }
+                    }
+                    Log.d("GOTOWISHLIST", "${isavailable.value}")
+                    trySend(ResultState.Success(isavailable.value))
+                }
+                .addOnFailureListener {
+                    trySend(ResultState.Error(it.message.toString()))
+                }
+            awaitClose {
+                close()
+            }
+        }
+    }
+    override fun RemoveToWishlist(uid: String, productId: String) {
+        firebaseFirestore.collection("USERSPECIFIC").document(uid).collection("WISHLIST")
+            .document(productId).delete().addOnSuccessListener {
+                Log.d("WISHLIST", "REMOVE TO WISHLIST SUCC :")
+            }
+            .addOnFailureListener {
+                Log.d("WISHLIST", "${it.message}")
+
+            }
+    }
+
+    override fun AllWishList(uid: String, ): Flow<ResultState<List<CartModel>>> {
+        return callbackFlow {
+            trySend(ResultState.Loading())
+            firebaseFirestore.collection("USERSPECIFIC").document(uid).collection("WISHLIST").get().addOnSuccessListener {
+                val CompleteWishList = mutableListOf<CartModel>()
+                for (document in it.documents){
+                    val  WishlistItem = document.toObject(CartModel::class.java)
+                    if (WishlistItem !=null){
+                        CompleteWishList.add(WishlistItem)
+                    }
+                }
+                Log.d("CompleteWishList","$CompleteWishList")
+                trySend(ResultState.Success(CompleteWishList))
+            }.addOnFailureListener {
+                trySend(ResultState.Error(it.message.toString()))
+            }
+            awaitClose{
+                close()
+            }
+        }
+    }
+
 }
