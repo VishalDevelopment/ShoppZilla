@@ -86,4 +86,6 @@ dependencies {
     implementation("androidx.hilt:hilt-navigation-compose:1.2.0")
     //Coil
     implementation("io.coil-kt:coil-compose:2.5.0")
+    //Extended Icon
+    implementation("androidx.compose.material:material-icons-extended")
 }

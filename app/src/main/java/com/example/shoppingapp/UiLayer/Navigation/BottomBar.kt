@@ -36,7 +36,7 @@ import com.example.shoppingapp.UiLayer.Screens.Cart_Screen.CartScreen
 import com.example.shoppingapp.UiLayer.Screens.HomeScreen
 import com.example.shoppingapp.UiLayer.Screens.ProductScreen
 import com.example.shoppingapp.UiLayer.Screens.Profile_Screen.ProfileScreen
-import com.example.shoppingapp.UiLayer.Screens.WishlistScreen
+import com.example.shoppingapp.UiLayer.Screens.Wishlist_Screen.WishlistScreen
 import com.example.shoppingapp.ui.theme.LitePink
 import com.example.shoppingapp.ui.theme.Pink80
 import com.google.firebase.auth.FirebaseAuth

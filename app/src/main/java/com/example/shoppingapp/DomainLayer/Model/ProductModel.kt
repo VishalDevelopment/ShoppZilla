@@ -34,6 +34,7 @@ data class CartModel(
     val name:String="",
     val imageUrl:String="",
     val price: Int =0,
+    val quantity:Int = 0,
     val color: String = "",
     val size: String = ""
 )

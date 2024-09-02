@@ -20,4 +20,7 @@ interface Repository {
 
     fun AddToCart(uid:String, cartModel: CartModel):kotlinx.coroutines.flow.Flow<ResultState<String>>
     fun GetToCart(uid: String):kotlinx.coroutines.flow.Flow<ResultState<List<CartModel>>>
+
+    fun AddtoWishlist(uid:String,cartModel: CartModel):kotlinx.coroutines.flow.Flow<ResultState<String>>
+//    fun GettoWishlist(uid:String,cartModel: CartModel):kotlinx.coroutines.flow.Flow<ResultState<Boolean>>
 }

@@ -3,7 +3,9 @@ package com.example.shoppingapp.UiLayer.Screens
 import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -17,14 +19,24 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentSize
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.FavoriteBorder
+import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
+import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -38,19 +50,23 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.withStyle
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
 import com.example.shoppingapp.DomainLayer.Model.CartModel
 import com.example.shoppingapp.DomainLayer.Model.TestModel
+import com.example.shoppingapp.R
 import com.example.shoppingapp.UiLayer.Screens.Cart_Screen.CartViewModel
+import com.example.shoppingapp.UiLayer.Screens.Wishlist_Screen.WishlistViewModel
 import com.example.shoppingapp.UiLayer.ViewModel.ShoppingVm
 import com.example.shoppingapp.UiLayer.ViewModel.SpecificProduct
 import com.example.shoppingapp.ui.theme.Pink80
@@ -60,10 +76,13 @@ import com.google.firebase.auth.FirebaseAuth
 val sizeSelectedImage = mutableStateOf("")
 val colorSelected = mutableStateOf("")
 val addToCartClicked = mutableStateOf(0)
+val quantity = mutableStateOf(0)
+
 @Composable
 fun ProductScreen(productId: String, firebaseAuth: FirebaseAuth) {
     val context = LocalContext.current
     val CartVM: CartViewModel = hiltViewModel()
+    val WishListVM :WishlistViewModel = hiltViewModel()
     val userId =  firebaseAuth.uid.toString()
     Log.d("PID", "$productId")
     val viewmodel: ShoppingVm = hiltViewModel()
@@ -168,8 +187,38 @@ fun ProductScreen(productId: String, firebaseAuth: FirebaseAuth) {
                 ProductColor(productData.value.color)
                 Spacer(modifier = Modifier.height(5.dp))
                 ProductSize(productData.value.Size)
-
                 Spacer(modifier = Modifier.height(8.dp))
+                Box(modifier = Modifier
+                    .height(45.dp)
+                    .border(1.dp, Color.Black), contentAlignment = Alignment.Center){
+                    Row (){
+
+                        Image(imageVector = Icons.Default.Remove, contentDescription =null,modifier = Modifier
+                            .padding(5.dp)
+                            .fillMaxHeight()
+                            .clickable {
+                                if (quantity.value > 0) {
+                                    quantity.value = (quantity.value.toInt() - 1)
+                                }
+                            } )
+                        OutlinedTextField(readOnly = true,value = quantity.value.toString(), onValueChange ={
+                            quantity.value  = it.toInt()
+                        }, modifier = Modifier
+                            .width(50.dp)
+                            .height(45.dp) )
+                        Image(imageVector = Icons.Default.Add, contentDescription =null,modifier = Modifier
+                            .padding(5.dp)
+                            .fillMaxHeight()
+                            .clickable {
+                                if (quantity.value < 10) {
+                                    quantity.value = (quantity.value.toInt() + 1)
+                                }
+                            } )
+
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(5.dp))
                 Text(
                     text = "Description",
                     fontSize = 13.sp,
@@ -207,17 +256,15 @@ fun ProductScreen(productId: String, firebaseAuth: FirebaseAuth) {
                             Toast.makeText(context, "Item Already Added", Toast.LENGTH_SHORT).show()
                         }
                       if (colorSelected.value!="" && sizeSelectedImage.value!=""){
-//                          addToCartClicked.value=1
-
                           CartVM.addtoCart(
-                              userId.toString(), CartModel(productData.value.id,productData.value.name,productData.value.imageUrl,productData.value.discountedPrice,colorSelected.value,sizeSelectedImage.value)
+                              userId.toString(), CartModel(productData.value.id,productData.value.name,productData.value.imageUrl,productData.value.discountedPrice, quantity.value,colorSelected.value,sizeSelectedImage.value)
                           )
                       }
 
                         else{
                           Toast.makeText(
                               context,
-                              "Please Select color And Size",
+                              "Please Select qunatity ,color And Size",
                               Toast.LENGTH_SHORT
                           ).show()
                       }
@@ -228,9 +275,36 @@ fun ProductScreen(productId: String, firebaseAuth: FirebaseAuth) {
                 ) {
                     Text(text = "Add to Cart", color = Color.White)
                 }
+                Spacer(modifier = Modifier.height(8.dp))
 
+                val stateCheck = remember {
+                    mutableStateOf(false)
+                }
+                Row (modifier= Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 8.dp)
+                    .clickable {
+                        WishListVM.addtoWishList(userId, CartModel(productData.value.id,productData.value.name,productData.value.imageUrl,productData.value.discountedPrice,
+                            quantity.value,
+                            colorSelected.value,
+                            sizeSelectedImage.value))
+                        if (stateCheck.value == true) {
+                            stateCheck.value = false
+                        } else {
+                            stateCheck.value = true
+                        }
+                    }, horizontalArrangement = Arrangement.Center){
+                    Log.d("CHECKSTATE","${stateCheck.value}")
+                    Icon(imageVector =   if (stateCheck.value==true) {
+                        Icons.Default.Favorite
+                    } else {
+                        Icons.Default.FavoriteBorder
+                    } ,
+                        contentDescription =null, tint = Color.Black)
+                    Box(modifier = Modifier.width(3.dp))
+                    Text(text = "Add to Wishlist")
+                }
             }
-
 
         }
     }
@@ -292,3 +366,4 @@ fun ProductSize(productSize: List<String>) {
         }
     }
 }
+

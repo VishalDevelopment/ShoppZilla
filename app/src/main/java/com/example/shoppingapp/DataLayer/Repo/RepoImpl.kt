@@ -210,42 +210,59 @@ class RepoImpl @Inject constructor(
     }
 
     override fun AddToCart(uid: String, cartModel: CartModel): Flow<ResultState<String>> {
-//        val UniqueId = UUID.randomUUID().toString()
         return callbackFlow {
             trySend(ResultState.Loading())
-            firebaseFirestore.collection("CART").document(uid).collection("CARTITEMS")
-                .add(cartModel).addOnSuccessListener {
-                trySend(ResultState.Success("Added to Cart !!"))
-            }
+            firebaseFirestore.collection("USERSPECIFIC").document(uid).collection("CART")
+                .document(cartModel.id)
+                .set(cartModel).addOnSuccessListener {
+                    trySend(ResultState.Success("Added to Cart !!"))
+                }
                 .addOnFailureListener {
-                  trySend(ResultState.Error("Error"))
+                    trySend(ResultState.Error("Error"))
                 }
             awaitClose {
                 close()
             }
         }
     }
+
     override fun GetToCart(uid: String): Flow<ResultState<List<CartModel>>> = callbackFlow {
-      trySend(ResultState.Loading())
-        firebaseFirestore.collection("CART").document(uid).collection("CARTITEMS")
+        trySend(ResultState.Loading())
+        firebaseFirestore.collection("USERSPECIFIC").document(uid).collection("CART")
             .get().addOnSuccessListener { documents ->
                 val cartItem = mutableListOf<CartModel>()
-                for(document in documents){
+                for (document in documents) {
                     val data = document.toObject(CartModel::class.java)
-                    if (data!=null){
-                       cartItem.add(data)
+                    if (data != null) {
+                        cartItem.add(data)
                     }
                 }
-                Log.d("ALLCARTITEM","$cartItem")
+                Log.d("ALLCARTITEM", "$cartItem")
                 trySend(ResultState.Success(cartItem))
-        }
+            }
             .addOnFailureListener {
                 trySend(ResultState.Error(it.message.toString()))
-                Log.d("GETCART","${it.message}")
+                Log.d("GETCART", "${it.message}")
             }
         awaitClose {
             close()
         }
     }
 
+    override fun AddtoWishlist(uid: String,cartModel: CartModel): Flow<ResultState<String>> {
+        return callbackFlow {
+            trySend(ResultState.Loading())
+            firebaseFirestore.collection("USERSPECIFIC").document(uid).collection("WISHLIST")
+                .document(cartModel.id)
+                .set(cartModel).addOnSuccessListener {
+                    trySend(ResultState.Success("Added to Wishlist !!"))
+                }
+                .addOnFailureListener {
+                    trySend(ResultState.Error("Error"))
+                }
+            awaitClose {
+                close()
+            }
+        }
+    }
 }

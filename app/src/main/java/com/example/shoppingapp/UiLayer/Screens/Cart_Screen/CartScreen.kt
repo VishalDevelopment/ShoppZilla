@@ -191,7 +191,7 @@ fun CartItemList(cartList: List<CartModel>) {
                     )
 
                 Text(
-                    text = "1",
+                    text = "${it.quantity}",
                     fontSize = 10.sp,
                     textAlign = TextAlign.Center,
                     modifier = Modifier
