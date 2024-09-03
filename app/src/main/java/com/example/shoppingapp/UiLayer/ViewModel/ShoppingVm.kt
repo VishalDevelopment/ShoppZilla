@@ -9,13 +9,11 @@ import com.example.shoppingapp.DomainLayer.Model.LoginModel
 import com.example.shoppingapp.DomainLayer.Model.ProductModel
 import com.example.shoppingapp.DomainLayer.Model.SignUpModel
 import com.example.shoppingapp.DomainLayer.Model.TestModel
-import com.example.shoppingapp.DomainLayer.Model.UserParentData
 import com.example.shoppingapp.DomainLayer.UseCase.LoginUserUseCase
 import com.example.shoppingapp.DomainLayer.UseCase.RegisterUserUserCase
-import com.example.shoppingapp.DomainLayer.UseCase.getCategoryUseCase
+import com.example.shoppingapp.DomainLayer.UseCase.Category_Model.getCategoryUseCase
 import com.example.shoppingapp.DomainLayer.UseCase.getProductUseCase
 import com.example.shoppingapp.DomainLayer.UseCase.getSpecificProductUseCase
-import com.example.shoppingapp.DomainLayer.UseCase.getUserByidUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -82,8 +80,6 @@ class ShoppingVm @Inject constructor(
             }
         }
     }
-
-
 
     val CategoriesData = MutableStateFlow<CategoryState>(CategoryState.Loading)
     fun getCategory() {

@@ -7,6 +7,8 @@ import com.example.shoppingapp.DomainLayer.Model.CartModel
 import com.example.shoppingapp.DomainLayer.Model.CategoryModel
 import com.example.shoppingapp.DomainLayer.Model.LoginModel
 import com.example.shoppingapp.DomainLayer.Model.ProductModel
+import com.example.shoppingapp.DomainLayer.Model.ProfileComponents
+import com.example.shoppingapp.DomainLayer.Model.ProfileModel
 import com.example.shoppingapp.DomainLayer.Model.SignUpModel
 import com.example.shoppingapp.DomainLayer.Model.TestModel
 import com.example.shoppingapp.DomainLayer.Model.UserParentData
@@ -86,13 +88,13 @@ class RepoImpl @Inject constructor(
         }
     }
 
-    override fun getUserByid(uid: String): Flow<ResultState<UserParentData>> = callbackFlow {
+    override fun getUserByid(uid: String): Flow<ResultState<ProfileComponents>> = callbackFlow {
         trySend(ResultState.Loading())
         firebaseFirestore.collection("USERS").document(uid).get().addOnCompleteListener {
-            val data = it.result.toObject(SignUpModel::class.java)
-            val userParentData = UserParentData(it.result.id, data!!)
+            val data = it.result.toObject(ProfileComponents::class.java)
+
             if (data != null) {
-                trySend(ResultState.Success(userParentData))
+                trySend(ResultState.Success(data))
                 close()
             } else {
                 if (it.exception != null) {
@@ -104,6 +106,23 @@ class RepoImpl @Inject constructor(
         awaitClose {
             close()
         }
+    }
+
+    override fun updateUser(userInfo: ProfileModel):Flow<ResultState<String>>{
+      return callbackFlow {
+          trySend(ResultState.Loading())
+          firebaseFirestore.collection("USERS").document(userInfo.uid).set(userInfo.userInfo)
+              .addOnSuccessListener {
+              trySend(  ResultState.Success("Successfully Updated !!"))
+                  Log.d("UPDATEUSER", "SUCCESS")
+              }.addOnFailureListener {
+                  trySend(ResultState.Error(it.message.toString()))
+              Log.d("UPDATEUSER", "${it.message.toString()}")
+          }
+          awaitClose {
+              close()
+          }
+      }
     }
 
     override fun getCategory(): Flow<ResultState<List<CategoryModel>>> = callbackFlow {
@@ -182,6 +201,26 @@ class RepoImpl @Inject constructor(
             awaitClose {
                 close()
             }
+        }
+    }
+
+    override fun FilterCategory(categoryName: String): Flow<ResultState<List<ProductModel>>> {
+        return callbackFlow {
+            trySend(ResultState.Loading())
+            firebaseFirestore.collection("PRODUCT").get().addOnSuccessListener {
+                val ProductModelList = mutableListOf<ProductModel>()
+                for (document in it.documents){
+                    if (document.getField<String>("category") == categoryName){
+                        val data = it.toObjects(ProductModelList::class.java)
+                        if (data!=null){
+                            Log.d("FILTERLIST","$data")
+                        }
+                    }
+                }
+            }.addOnFailureListener {
+                trySend(ResultState.Error(it.message.toString()))
+            }
+
         }
     }
 

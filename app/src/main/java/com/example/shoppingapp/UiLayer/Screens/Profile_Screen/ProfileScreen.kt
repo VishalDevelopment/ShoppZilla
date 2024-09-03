@@ -34,6 +34,7 @@ import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -50,6 +51,10 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.example.shoppingapp.DomainLayer.Model.ProfileComponents
+import com.example.shoppingapp.DomainLayer.Model.ProfileModel
+import com.example.shoppingapp.DomainLayer.Model.SignUpModel
+import com.example.shoppingapp.DomainLayer.Model.UserParentData
 import com.example.shoppingapp.R
 import com.example.shoppingapp.UiLayer.ViewModel.ShoppingVm
 import com.example.shoppingapp.ui.theme.Pink80
@@ -66,34 +71,55 @@ fun ProfileScreen(
     firebaseAuth: FirebaseAuth,
     navHostController: () -> Unit,
 ) {
-    val ProfileVM :ProfileViewModel = hiltViewModel()
+    val context = LocalContext.current
+    val ProfileVM: ProfileViewModel = hiltViewModel()
     val uid = firebaseAuth.uid.toString()
-   LaunchedEffect (key1=true){
-       ProfileVM.userProfileData(uid)
-   }
+    LaunchedEffect(key1 = true) {
+        ProfileVM.userProfileData(uid)
+    }
     val state = ProfileVM.userdata.collectAsState()
+
 
     var fname by remember { mutableStateOf("") }
     var lname by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
-    var phoneNo by remember{ mutableStateOf("") }
+    var phoneNo by remember { mutableStateOf("") }
     var address by remember { mutableStateOf("") }
+    val UpdateResponse = ProfileVM.updateProfileResponse.collectAsState()
+
     val EditButtonSelected = remember {
         mutableStateOf(false)
     }
 
     val ReadOnly by remember {
-        if (EditButtonSelected.value == false) {
-            mutableStateOf(true)
-        } else {
-            mutableStateOf(false)
+        derivedStateOf { EditButtonSelected.value == false }
+    }
+    Log.d("EDITABLE", "${EditButtonSelected.value}")
+
+    Log.d("READONLY", "${ReadOnly}")
+   LaunchedEffect(UpdateResponse.value) {
+        when (UpdateResponse.value) {
+            is UpdateProfileState.Error -> {
+                val errorMessage = (UpdateResponse.value as UpdateProfileState.Error).message
+                Toast.makeText(context, "$errorMessage", Toast.LENGTH_SHORT).show()
+            }
+
+            is UpdateProfileState.Loading -> {
+                Toast.makeText(context, "Updating...", Toast.LENGTH_SHORT).show()
+            }
+
+            is UpdateProfileState.Success -> {
+                Toast.makeText(context, "Successfully Updated !!", Toast.LENGTH_SHORT).show()
+                EditButtonSelected.value = false
+
+            }
         }
     }
+
 
     if (isDialog == true) {
         DialogBox(firebaseAuth, navHostController)
     }
-    val context = LocalContext.current
     when (state.value) {
         is UserDetailState.Error -> {
             Toast.makeText(
@@ -112,15 +138,15 @@ fun ProfileScreen(
         is UserDetailState.Success -> {
 
             LaunchedEffect(key1 = true) {
-            val successData = state.value as? UserDetailState.Success
+                val successData = state.value as? UserDetailState.Success
                 successData?.let {
-                    Log.d("USERDATA","${it.userParentData.signUpModel}")
-                   email = it.userParentData.signUpModel.email
-                    var fullName = it.userParentData.signUpModel.name
+                    Log.d("USERDATA", "${it.userInfo}")
+                    email = it.userInfo.email
+                    var fullName = it.userInfo.name
                     fname = fullName.substringBefore(" ")
                     lname = fullName.substringAfter(" ")
-                    phoneNo = it.userParentData.signUpModel.phone
-                    address = it.userParentData.signUpModel.address
+                    phoneNo =  it.userInfo.phoneNo
+                    address = it.userInfo.address
                 }
             }
         }
@@ -173,7 +199,8 @@ fun ProfileScreen(
                         focusedBorderColor = Pink80,
                         unfocusedBorderColor = Pink80
                     ),
-                    shape = RoundedCornerShape(18.dp), readOnly = ReadOnly
+                    shape = RoundedCornerShape(18.dp),
+                    readOnly = ReadOnly
                 )
                 OutlinedTextField(
                     value = lname,
@@ -225,7 +252,7 @@ fun ProfileScreen(
                 OutlinedTextField(
                     value = address,
                     onValueChange = {
-                        address= it
+                        address = it
                     },
                     placeholder = { Text(text = "Address") },
                     modifier = Modifier.fillMaxWidth(),
@@ -235,15 +262,19 @@ fun ProfileScreen(
                     ),
                     shape = RoundedCornerShape(18.dp), readOnly = ReadOnly
                 )
-                val context = LocalContext.current
+
                 Spacer(modifier = Modifier.padding(vertical = 10.dp))
                 Column() {
                     Button(
                         onClick = {
                             if (EditButtonSelected.value == true) {
-
                                 // Save Code
-
+                                val userInfo = ProfileModel(
+                                    uid,
+                                    ProfileComponents(fname + " " + lname, email, phoneNo, address)
+                                )
+                                ProfileVM.updateProfileData(userInfo)
+                                ProfileVM.userProfileData(uid)
                             }
                             if (EditButtonSelected.value == false) {
                                 //Log Out Code
@@ -327,6 +358,7 @@ fun DialogBox(firebaseAuth: FirebaseAuth, navHostController: () -> Unit) {
                 onClick = {
                     firebaseAuth.signOut()
                     navHostController()
+                    isDialog = false
                 },
                 modifier = Modifier.fillMaxWidth(),
                 colors = ButtonDefaults.buttonColors(Pink80),
