@@ -28,9 +28,8 @@ class MainActivity : ComponentActivity() {
             ShoppingAppTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                     Box(modifier = Modifier.padding(innerPadding)){
-                        val CATEGORYVM:CategoryVm = hiltViewModel()
-                        CATEGORYVM.filterCategory("T-Shirt")
-//                        AppNav(firebaseAuth)
+
+                        AppNav(firebaseAuth)
                     }
                 }
             }

@@ -204,23 +204,26 @@ class RepoImpl @Inject constructor(
         }
     }
 
-    override fun FilterCategory(categoryName: String): Flow<ResultState<List<ProductModel>>> {
+    override fun FilterCategory(categoryName: String): Flow<ResultState<List<TestModel>>> {
         return callbackFlow {
             trySend(ResultState.Loading())
             firebaseFirestore.collection("PRODUCT").get().addOnSuccessListener {
-                val ProductModelList = mutableListOf<ProductModel>()
+                val ProductModelList = listOf<TestModel>()
                 for (document in it.documents){
                     if (document.getField<String>("category") == categoryName){
-                        val data = it.toObjects(ProductModelList::class.java)
+                        val data = it.toObjects(TestModel::class.java)
                         if (data!=null){
-                            Log.d("FILTERLIST","$data")
+//                            ProductModelList.add(data.)
                         }
                     }
                 }
+                trySend(ResultState.Success(ProductModelList))
             }.addOnFailureListener {
                 trySend(ResultState.Error(it.message.toString()))
             }
-
+            awaitClose{
+                close()
+            }
         }
     }
 

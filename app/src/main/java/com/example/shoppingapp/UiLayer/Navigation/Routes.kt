@@ -20,6 +20,8 @@ sealed class Routes(val route:String){
     object Profile
 
     @Serializable
+    data class Category(val categoryName:String)
+    @Serializable
     data class ProductDetail(val productId: String)
     @Serializable
     object Checkout

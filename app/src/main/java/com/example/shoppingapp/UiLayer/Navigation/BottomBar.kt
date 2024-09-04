@@ -33,6 +33,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
 import com.example.shoppingapp.UiLayer.Screens.Cart_Screen.CartScreen
+import com.example.shoppingapp.UiLayer.Screens.Category_Screen.CategoryScreen
 import com.example.shoppingapp.UiLayer.Screens.HomeScreen
 import com.example.shoppingapp.UiLayer.Screens.ProductScreen
 import com.example.shoppingapp.UiLayer.Screens.Profile_Screen.ProfileScreen
@@ -110,10 +111,6 @@ fun BottomBar(firebaseAuth: FirebaseAuth,MainNavHost:NavHostController) {
                 composable<Routes.Cart> {
                     CartScreen(firebaseAuth)
                 }
-                composable<Routes.ProductDetail>{
-                  val  productId = it.toRoute<Routes.ProductDetail>()
-                    ProductScreen(productId.productId, firebaseAuth)
-                }
                 composable<Routes.Profile> {
                     ProfileScreen(firebaseAuth = firebaseAuth){
                             MainNavHost.navigate(Routes.Auth) {
@@ -122,6 +119,16 @@ fun BottomBar(firebaseAuth: FirebaseAuth,MainNavHost:NavHostController) {
                                 }
                             }
                         }
+                }
+
+                composable<Routes.ProductDetail>{
+                    val  productId = it.toRoute<Routes.ProductDetail>()
+                    ProductScreen(productId.productId, firebaseAuth)
+                }
+
+                composable<Routes.Category> {
+                    val CategoryName = it.toRoute<Routes.Category>()
+                    CategoryScreen(CategoryName.categoryName)
                 }
             }
         }

@@ -63,7 +63,6 @@ import com.example.shoppingapp.UiLayer.ViewModel.CategoryState
 import com.example.shoppingapp.UiLayer.ViewModel.ProductState
 import com.example.shoppingapp.UiLayer.ViewModel.ShoppingVm
 import com.example.shoppingapp.ui.theme.Pink80
-import okhttp3.Route
 
 @Composable
 fun HomeScreen(navController: NavHostController) {
@@ -118,7 +117,7 @@ fun HomeScreen(navController: NavHostController) {
             Spacer(modifier = Modifier.padding(vertical = 5.dp))
             OptionHead("Categories", "See More")
             Spacer(modifier = Modifier.padding(vertical = 5.dp))
-            Category(categoryData)
+            Category(categoryData,navController)
             Spacer(modifier = Modifier.padding(vertical = 5.dp))
             OptionHead(title = "Flash Sale", moreData = "See More")
             ShoppingList(productData.value,navController)
@@ -188,7 +187,7 @@ fun SearchBar() {
 }
 
 @Composable
-fun Category(categoryData: MutableState<List<CategoryModel>>) {
+fun Category(categoryData: MutableState<List<CategoryModel>>, navController: NavHostController) {
 
 
     LazyRow(
@@ -212,7 +211,7 @@ fun Category(categoryData: MutableState<List<CategoryModel>>) {
                         .fillMaxWidth(),
                     horizontalArrangement = Arrangement.Center
                 ) {
-                    CategoryItem(it)
+                    CategoryItem(it,navController)
                 }
             }
         }
@@ -221,7 +220,7 @@ fun Category(categoryData: MutableState<List<CategoryModel>>) {
 }
 
 @Composable
-fun CategoryItem(categoryModel: CategoryModel) {
+fun CategoryItem(categoryModel: CategoryModel, navController: NavHostController) {
 
 
     Log.d("CATEGORYITEM","${categoryModel.imageUrl}")
@@ -236,7 +235,10 @@ fun CategoryItem(categoryModel: CategoryModel) {
         error = error,
         contentDescription = "Categories",
         contentScale = ContentScale.Inside,
-        modifier = Modifier.size(55.dp)
+        modifier = Modifier.size(55.dp).clickable {
+            val categoryName = categoryModel.name
+            navController.navigate(Routes.Category(categoryName))
+        }
     )
 
 }
