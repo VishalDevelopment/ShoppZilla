@@ -30,19 +30,16 @@ class ProfileViewModel @Inject constructor(
             getuserUserUseCase.getUser(uid).collect {
                 when (it) {
                     is ResultState.Error -> {
-                        Log.d("ERROR", UserDetailState.Error(message = it.error).message)
                         _userdata.value = UserDetailState.Error(message = it.error)
 
                     }
 
                     is ResultState.Loading -> {
-                        Log.d("LOAD", "LOAD : ")
                         _userdata.value = UserDetailState.Loading
 
                     }
 
                     is ResultState.Success -> {
-                        Log.d("SUCCESS", "SUCC : ")
                         _userdata.value = UserDetailState.Success( it.data)
                     }
                 }

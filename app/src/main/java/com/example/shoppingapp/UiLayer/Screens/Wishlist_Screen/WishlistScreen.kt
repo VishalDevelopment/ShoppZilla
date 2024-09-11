@@ -62,16 +62,12 @@ fun WishlistScreen(firebaseAuth: FirebaseAuth) {
     }
     when(WishListState.value){
         is CompleteWishListState.Error -> {
-            Log.d("WISHLISTSCREEN","ERR : ")
         }
        is CompleteWishListState.Loading -> {
-           Log.d("WISHLISTSCREEN","LOAD : ")
-
        }
         is CompleteWishListState.Success -> {
             val wishlist = (WishListState.value as CompleteWishListState.Success).wishlist
             WishList.value = wishlist
-            Log.d("WISHLISTSCREEN","SUCCESS : $wishlist")
         }
     }
     Box(modifier = Modifier

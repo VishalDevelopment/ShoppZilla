@@ -1,12 +1,8 @@
-package com.example.shoppingapp.DomainLayer.UseCase
+package com.example.shoppingapp.DomainLayer.UseCase.Auth_UseCase
 
 import com.example.shoppingapp.CommonState.ResultState
 import com.example.shoppingapp.DataLayer.Repo.RepoImpl
 import com.example.shoppingapp.DomainLayer.Model.SignUpModel
-import com.example.shoppingapp.DomainLayer.Repo.Repository
-import kotlinx.coroutines.flow.callbackFlow
-import kotlinx.coroutines.flow.flow
-import java.util.concurrent.Flow
 import javax.inject.Inject
 
 class RegisterUserUserCase@Inject constructor(private  val repo :RepoImpl) {

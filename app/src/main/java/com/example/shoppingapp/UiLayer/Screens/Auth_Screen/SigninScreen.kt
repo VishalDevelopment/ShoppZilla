@@ -52,12 +52,13 @@ import com.example.shoppingapp.UiLayer.Navigation.Routes
 import com.example.shoppingapp.UiLayer.ViewModel.LoginState
 import com.example.shoppingapp.UiLayer.ViewModel.ShoppingVm
 import com.example.shoppingapp.ui.theme.Pink80
+import com.google.firebase.auth.FirebaseAuth
 
 val showDialog = mutableStateOf(false)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 
-fun SigninScreen(navController: NavController) {
+fun SigninScreen(navController: NavController, firebaseAuth: FirebaseAuth) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     val viewmodel :ShoppingVm = hiltViewModel()
@@ -68,19 +69,16 @@ fun SigninScreen(navController: NavController) {
     if (state.value== LoginState.Loading){
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center){
             CircularProgressIndicator()
-            Log.d("COMP","LOAD : ")
         }
     }
     else if (state.value == LoginState.Error("Error ")){
-        Log.d("COMP","ERR : ")
         Toast.makeText(context, "${(state.value as LoginState.Error)}", Toast.LENGTH_SHORT).show()
     }
     else if (state.value == LoginState.Succes){
         showDialog.value = true
         if (showDialog.value==true){
-            LoginPopUp(navController,context)
+            LoginPopUp(navController,context,firebaseAuth)
         }
-        Log.d("COMP","SUCCESS : ")
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
@@ -193,7 +191,7 @@ fun SigninScreen(navController: NavController) {
 }
 
 @Composable
-fun LoginPopUp(navController: NavController, context: Context) {
+fun LoginPopUp(navController: NavController, context: Context, firebaseAuth: FirebaseAuth) {
     AlertDialog(title = { Text(text = "Shopping App")}, text = { Text(text = "Login Succesfully")}, onDismissRequest = {
         Toast.makeText(context, "Dismissed Dialog !!", Toast.LENGTH_SHORT).show()
     }, confirmButton = { TextButton(
@@ -204,7 +202,9 @@ fun LoginPopUp(navController: NavController, context: Context) {
         Text(text = "Continue")
     } }, dismissButton = {
         TextButton(onClick = {
+            firebaseAuth.signOut()
             showDialog.value = false
+            Log.d("CHECKSIGNOUT","$showDialog")
             Toast.makeText(context, "Dismissed Clicked !!", Toast.LENGTH_SHORT).show()
 
         }) {

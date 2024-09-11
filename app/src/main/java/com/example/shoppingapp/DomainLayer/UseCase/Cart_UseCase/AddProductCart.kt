@@ -1,4 +1,4 @@
-package com.example.shoppingapp.DomainLayer.UseCase
+package com.example.shoppingapp.DomainLayer.UseCase.Cart_UseCase
 
 import com.example.shoppingapp.CommonState.ResultState
 import com.example.shoppingapp.DataLayer.Repo.RepoImpl

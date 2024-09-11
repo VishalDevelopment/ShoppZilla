@@ -6,7 +6,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
-import androidx.compose.material.icons.filled.FavoriteBorder
+import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material.icons.outlined.AccountCircle
@@ -27,16 +27,22 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.NavDestination.Companion.hierarchy
+import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
 import com.example.shoppingapp.UiLayer.Screens.Cart_Screen.CartScreen
 import com.example.shoppingapp.UiLayer.Screens.Category_Screen.CategoryScreen
-import com.example.shoppingapp.UiLayer.Screens.HomeScreen
-import com.example.shoppingapp.UiLayer.Screens.ProductScreen
+import com.example.shoppingapp.UiLayer.Screens.Home_Screen.HomeScreen
+import com.example.shoppingapp.UiLayer.Screens.Home_Screen.ProductScreen
 import com.example.shoppingapp.UiLayer.Screens.Profile_Screen.ProfileScreen
+import com.example.shoppingapp.UiLayer.Screens.Shipping_Screen.ShippingScreen
+import com.example.shoppingapp.UiLayer.Screens.Shipping_Screen.ShippingViewModel
 import com.example.shoppingapp.UiLayer.Screens.Wishlist_Screen.WishlistScreen
 import com.example.shoppingapp.ui.theme.LitePink
 import com.example.shoppingapp.ui.theme.Pink80
@@ -53,12 +59,13 @@ data class BottomItem(
 @Composable
 
 fun BottomBar(firebaseAuth: FirebaseAuth,MainNavHost:NavHostController) {
-
     val navController = rememberNavController()
-
+    val ShippingVm:ShippingViewModel = hiltViewModel()
+    val navBackStackEntry by navController.currentBackStackEntryAsState()
+    val currentDestination = navBackStackEntry?.destination
     val items = listOf(
         BottomItem("Home", Icons.Default.Home, Icons.Outlined.Home,Routes.Home),
-        BottomItem("Wishlist", Icons.Default.FavoriteBorder, Icons.Outlined.FavoriteBorder,Routes.Wishlist),
+        BottomItem("Wishlist", Icons.Default.Favorite, Icons.Outlined.FavoriteBorder,Routes.Wishlist),
         BottomItem("Cart", Icons.Default.ShoppingCart, Icons.Outlined.ShoppingCart,Routes.Cart),
         BottomItem("Profile", Icons.Default.AccountCircle, Icons.Outlined.AccountCircle,Routes.Profile)
     )
@@ -75,22 +82,20 @@ fun BottomBar(firebaseAuth: FirebaseAuth,MainNavHost:NavHostController) {
                 modifier = Modifier.height(50.dp),
                 windowInsets = WindowInsets(0.dp)
             ) {
-                items.forEach { index ->
+                items.forEachIndexed{ index , barItem ->
+                    val selected= currentDestination?.hierarchy?.any(){ it.route == barItem.navigate::class.qualifiedName } == true
                     NavigationBarItem(
-                        selected = index == selectedItem,
+                        selected = barItem == selectedItem,
                         onClick = {
-                            selectedItem = index
-                         navController.navigate(selectedItem.navigate){
-                             // Clear back stack for login/signup flow
+                           selectedItem = barItem
 
-                         }
                         },
                         icon = {
                             Icon(
-                                imageVector = if (selectedItem == index) {
-                                    index.selectedImg
+                                imageVector = if (selectedItem == barItem) {
+                                    barItem.selectedImg
                                 } else {
-                                    index.unselectedImg
+                                    barItem.unselectedImg
                                 }, contentDescription = null
                             )
                         }, colors = NavigationBarItemColors(Color.Black,Color.Black,
@@ -109,7 +114,7 @@ fun BottomBar(firebaseAuth: FirebaseAuth,MainNavHost:NavHostController) {
                     WishlistScreen(firebaseAuth)
                 }
                 composable<Routes.Cart> {
-                    CartScreen(firebaseAuth)
+                    CartScreen(firebaseAuth,navController,ShippingVm)
                 }
                 composable<Routes.Profile> {
                     ProfileScreen(firebaseAuth = firebaseAuth){
@@ -123,12 +128,17 @@ fun BottomBar(firebaseAuth: FirebaseAuth,MainNavHost:NavHostController) {
 
                 composable<Routes.ProductDetail>{
                     val  productId = it.toRoute<Routes.ProductDetail>()
-                    ProductScreen(productId.productId, firebaseAuth)
+                    ProductScreen(productId.productId, firebaseAuth,navController,ShippingVm)
                 }
 
                 composable<Routes.Category> {
                     val CategoryName = it.toRoute<Routes.Category>()
-                    CategoryScreen(CategoryName.categoryName)
+                    CategoryScreen(CategoryName.categoryName,navController)
+                }
+
+                composable<Routes.Shipping>{
+                    val productList = it.toRoute<Routes.Shipping>()
+                    ShippingScreen(productList.Flag,ShippingVm,firebaseAuth)
                 }
             }
         }

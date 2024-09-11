@@ -3,9 +3,11 @@ package com.example.shoppingapp.DataLayer.Repo
 import android.util.Log
 import androidx.compose.runtime.mutableStateOf
 import com.example.shoppingapp.CommonState.ResultState
+import com.example.shoppingapp.DomainLayer.Model.AddressModel
 import com.example.shoppingapp.DomainLayer.Model.CartModel
 import com.example.shoppingapp.DomainLayer.Model.CategoryModel
 import com.example.shoppingapp.DomainLayer.Model.LoginModel
+import com.example.shoppingapp.DomainLayer.Model.OrderForm
 import com.example.shoppingapp.DomainLayer.Model.ProductModel
 import com.example.shoppingapp.DomainLayer.Model.ProfileComponents
 import com.example.shoppingapp.DomainLayer.Model.ProfileModel
@@ -40,16 +42,13 @@ class RepoImpl @Inject constructor(
                         .set(signUpModel).addOnCompleteListener {
                             if (it.isSuccessful) {
                                 trySend(ResultState.Success("Registered User"))
-                                Log.d("CHECK", "Registered")
                             } else {
                                 val errorMessage = task.exception?.localizedMessage
                                     ?: "An error occurred during registration."
                                 trySend(ResultState.Error(errorMessage))
-                                Log.d("CHECK", "Failed Reg")
                             }
                         }
                     trySend(ResultState.Success("Successfully Created"))
-                    Log.d("SUCCESS", "USER CREATED")
                 } else {
                     // Handle registration error with a more informative message
                     val errorMessage = task.exception?.localizedMessage
@@ -70,16 +69,13 @@ class RepoImpl @Inject constructor(
         firebase.signInWithEmailAndPassword(loginModel.email, loginModel.password)
             .addOnCompleteListener { task ->
                 trySend(ResultState.Loading())
-                Log.d("REPO", "LOAD : ")
                 if (task.isSuccessful) {
                     trySend(ResultState.Success("Login Successfully !!"))
-                    Log.d("REPO", "SUCC : ")
                     cancel()
                 } else {
                     val errorMessage = task.exception?.localizedMessage
                         ?: "An error occurred during registration."
                     trySend(ResultState.Error(errorMessage))
-                    Log.d("REPO", "ERR : ")
                     cancel()
                 }
             }
@@ -108,21 +104,19 @@ class RepoImpl @Inject constructor(
         }
     }
 
-    override fun updateUser(userInfo: ProfileModel):Flow<ResultState<String>>{
-      return callbackFlow {
-          trySend(ResultState.Loading())
-          firebaseFirestore.collection("USERS").document(userInfo.uid).set(userInfo.userInfo)
-              .addOnSuccessListener {
-              trySend(  ResultState.Success("Successfully Updated !!"))
-                  Log.d("UPDATEUSER", "SUCCESS")
-              }.addOnFailureListener {
-                  trySend(ResultState.Error(it.message.toString()))
-              Log.d("UPDATEUSER", "${it.message.toString()}")
-          }
-          awaitClose {
-              close()
-          }
-      }
+    override fun updateUser(userInfo: ProfileModel): Flow<ResultState<String>> {
+        return callbackFlow {
+            trySend(ResultState.Loading())
+            firebaseFirestore.collection("USERS").document(userInfo.uid).set(userInfo.userInfo)
+                .addOnSuccessListener {
+                    trySend(ResultState.Success("Successfully Updated !!"))
+                }.addOnFailureListener {
+                    trySend(ResultState.Error(it.message.toString()))
+                }
+            awaitClose {
+                close()
+            }
+        }
     }
 
     override fun getCategory(): Flow<ResultState<List<CategoryModel>>> = callbackFlow {
@@ -135,13 +129,10 @@ class RepoImpl @Inject constructor(
                     val name = document.getField<String>("name")
                     val imageUrl = document.getField<String>("imageUrl")
 //                    Log.d("CATEGORYDOCREPO "," ${document} ")
-                    Log.d("CATEGORYDOCDATAOUT ", " ${id} && ${name} && ${imageUrl} ")
                     if (id != null && name != null && imageUrl != null) {
-                        Log.d("CATEGORYDOCDATAIN ", " ${id} && ${name} && ${imageUrl} ")
                         categoryList.add(CategoryModel(id, name, imageUrl))
                     }
                 }
-                Log.d("CATEGORYRPEO", " $categoryList")
                 trySend(ResultState.Success(categoryList))
             }
         }.addOnFailureListener {
@@ -192,11 +183,9 @@ class RepoImpl @Inject constructor(
 
                     }
                 }
-                Log.d("PRODUCTDATA", "$productList")
                 trySend(ResultState.Success(productList))
             }.addOnFailureListener {
                 trySend(ResultState.Error(it.message.toString()))
-                Log.d("PRODUCTDATA", "${it.message}")
             }
             awaitClose {
                 close()
@@ -204,24 +193,45 @@ class RepoImpl @Inject constructor(
         }
     }
 
-    override fun FilterCategory(categoryName: String): Flow<ResultState<List<TestModel>>> {
+    override fun FilterCategory(categoryName: String): Flow<ResultState<List<ProductModel>>> {
         return callbackFlow {
             trySend(ResultState.Loading())
             firebaseFirestore.collection("PRODUCT").get().addOnSuccessListener {
-                val ProductModelList = listOf<TestModel>()
-                for (document in it.documents){
-                    if (document.getField<String>("category") == categoryName){
-                        val data = it.toObjects(TestModel::class.java)
-                        if (data!=null){
-//                            ProductModelList.add(data.)
+                val productList = mutableListOf<ProductModel>()
+                for (document in it.documents) {
+
+                    val id = document.getField<String>("id")
+                    val name = document.getField<String>("name")
+                    val image = document.getField<String>("imageUrl")
+                    val description = document.getField<String>("description")
+                    val category = document.getField<String>("category")
+                    val actualPrice = document.get("actualPrice")
+                    val discountedPrice = document.get("discountedPrice")
+                    val discount = document.get("discountedPercentage")
+
+                    if (id != null && name != null && description != null && category != null && actualPrice != null && discountedPrice != null && discount != null) {
+
+                        if (categoryName == category) {
+                            productList.add(
+                                ProductModel(
+                                    id,
+                                    name,
+                                    description,
+                                    image!!,
+                                    actualPrice,
+                                    discountedPrice,
+                                    discount
+                                )
+                            )
                         }
                     }
                 }
-                trySend(ResultState.Success(ProductModelList))
+
+                trySend(ResultState.Success(productList))
             }.addOnFailureListener {
                 trySend(ResultState.Error(it.message.toString()))
             }
-            awaitClose{
+            awaitClose {
                 close()
             }
         }
@@ -236,14 +246,12 @@ class RepoImpl @Inject constructor(
 
                 val productData = it.toObject(TestModel::class.java)
                 if (productData != null) {
-                    Log.d("FIREPRODUCT", "$productData")
                     trySend(ResultState.Success(productData))
 
                 }
 //                }
             }
                 .addOnFailureListener {
-                    Log.d("REPOIMPL", "${it.message}")
                     trySend(ResultState.Error(it.message.toString()))
                 }
             awaitClose {
@@ -280,15 +288,29 @@ class RepoImpl @Inject constructor(
                         cartItem.add(data)
                     }
                 }
-                Log.d("ALLCARTITEM", "$cartItem")
                 trySend(ResultState.Success(cartItem))
             }
             .addOnFailureListener {
                 trySend(ResultState.Error(it.message.toString()))
-                Log.d("GETCART", "${it.message}")
             }
         awaitClose {
             close()
+        }
+    }
+
+    override fun RemoveToCart(uid: String, productId: String): Flow<ResultState<String>> {
+        return callbackFlow {
+            trySend(ResultState.Loading())
+            firebaseFirestore.collection("USERSPECIFIC").document(uid).collection("CART")
+                .document(productId).delete().addOnSuccessListener {
+                    trySend(ResultState.Success("Removed To Cart"))
+                }
+                .addOnFailureListener {
+                    trySend(ResultState.Error(it.message.toString()))
+                }
+            awaitClose {
+                close()
+            }
         }
     }
 
@@ -308,6 +330,7 @@ class RepoImpl @Inject constructor(
             }
         }
     }
+
     override fun GettoWishlist(uid: String, productId: String): Flow<ResultState<Boolean>> {
         return callbackFlow {
             trySend(ResultState.Loading())
@@ -319,7 +342,6 @@ class RepoImpl @Inject constructor(
                             isavailable.value = true
                         }
                     }
-                    Log.d("GOTOWISHLIST", "${isavailable.value}")
                     trySend(ResultState.Success(isavailable.value))
                 }
                 .addOnFailureListener {
@@ -330,37 +352,93 @@ class RepoImpl @Inject constructor(
             }
         }
     }
+
     override fun RemoveToWishlist(uid: String, productId: String) {
         firebaseFirestore.collection("USERSPECIFIC").document(uid).collection("WISHLIST")
             .document(productId).delete().addOnSuccessListener {
-                Log.d("WISHLIST", "REMOVE TO WISHLIST SUCC :")
             }
             .addOnFailureListener {
-                Log.d("WISHLIST", "${it.message}")
-
             }
     }
 
-    override fun AllWishList(uid: String, ): Flow<ResultState<List<CartModel>>> {
+    override fun AllWishList(uid: String): Flow<ResultState<List<CartModel>>> {
         return callbackFlow {
             trySend(ResultState.Loading())
-            firebaseFirestore.collection("USERSPECIFIC").document(uid).collection("WISHLIST").get().addOnSuccessListener {
-                val CompleteWishList = mutableListOf<CartModel>()
-                for (document in it.documents){
-                    val  WishlistItem = document.toObject(CartModel::class.java)
-                    if (WishlistItem !=null){
-                        CompleteWishList.add(WishlistItem)
+            firebaseFirestore.collection("USERSPECIFIC").document(uid).collection("WISHLIST").get()
+                .addOnSuccessListener {
+                    val CompleteWishList = mutableListOf<CartModel>()
+                    for (document in it.documents) {
+                        val WishlistItem = document.toObject(CartModel::class.java)
+                        if (WishlistItem != null) {
+                            CompleteWishList.add(WishlistItem)
+                        }
                     }
+                    trySend(ResultState.Success(CompleteWishList))
+                }.addOnFailureListener {
+                    trySend(ResultState.Error(it.message.toString()))
                 }
-                Log.d("CompleteWishList","$CompleteWishList")
-                trySend(ResultState.Success(CompleteWishList))
-            }.addOnFailureListener {
-                trySend(ResultState.Error(it.message.toString()))
-            }
-            awaitClose{
+            awaitClose {
                 close()
             }
         }
     }
 
+    override fun OrderProduct(orderData: OrderForm): Flow<ResultState<String>> {
+        return callbackFlow {
+            trySend(ResultState.Loading())
+            firebaseFirestore.collection("ORDER").document(orderData.uid).collection("ORDERDATA")
+                .document().set(orderData).addOnSuccessListener {
+                    trySend(ResultState.Success("ORDERCompleted"))
+                }
+                .addOnFailureListener {
+                    trySend(ResultState.Error(it.message.toString()))
+                }
+            awaitClose {
+                close()
+            }
+        }
+    }
+
+    override fun AddAddress(uid: String, address: AddressModel) {
+        firebaseFirestore.collection("ORDER").document(uid).collection("ADDRESS").document(uid)
+            .set(address).addOnSuccessListener {
+            Log.d("ADDRESS", "Success")
+        }
+            .addOnFailureListener {
+                Log.d("ADDRESS", "Failed")
+            }
+    }
+
+    override fun GetAddress(uid: String): Flow<ResultState<AddressModel>> {
+        return callbackFlow {
+            trySend(ResultState.Loading())
+
+            firebaseFirestore.collection("ORDER")
+                .document(uid)
+                .collection("ADDRESS")
+                .document(uid)
+                .get()
+                .addOnSuccessListener { documentSnapshot ->
+                    if (documentSnapshot.exists()) {
+                        val data = documentSnapshot.toObject(AddressModel::class.java)
+                        if (data != null) {
+                            Log.d("GETADDRESS", "$data") // More descriptive log tag
+                            trySend(ResultState.Success(data))
+                        } else {
+                            // Handle missing AddressModel data (optional)
+                            Log.w("GETADDRESS", "AddressModel data missing from Firestore for uid: $uid")
+                            trySend(ResultState.Error("Address data missing"))
+                        }
+                    } else {
+                        Log.w("GETADDRESS", "No address document found for uid: $uid")
+                        trySend(ResultState.Error("No address document found"))
+                    }
+                }
+                .addOnFailureListener { exception ->
+                    trySend(ResultState.Error(exception.message.toString()))
+                }
+
+            awaitClose { cancel() } // Use cancel() for proper cleanup
+        }
+    }
 }

@@ -23,7 +23,7 @@ fun AppNav(firebaseAuth: FirebaseAuth) {
     NavHost(navController = navController, startDestination = startdestination) {
         navigation<Routes.Auth>(startDestination =Routes.Login) {
             composable<Routes.Login> {
-                SigninScreen(navController)
+                SigninScreen(navController,firebaseAuth)
             }
             composable<Routes.SignUp> {
                 SignUpScreen(navController)

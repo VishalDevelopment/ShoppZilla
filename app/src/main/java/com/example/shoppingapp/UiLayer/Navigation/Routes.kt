@@ -1,10 +1,11 @@
 package com.example.shoppingapp.UiLayer.Navigation
 
+import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
 
 
 @Serializable
-sealed class Routes(val route:String){
+sealed class Routes{
 
     @Serializable
     object Login
@@ -25,6 +26,9 @@ sealed class Routes(val route:String){
     data class ProductDetail(val productId: String)
     @Serializable
     object Checkout
+
+    @Serializable
+    class Shipping(val Flag: Int)
     @Serializable
     //Nav Graph
     object Auth

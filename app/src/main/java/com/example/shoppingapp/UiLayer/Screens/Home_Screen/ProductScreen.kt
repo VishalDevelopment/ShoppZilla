@@ -1,4 +1,4 @@
-package com.example.shoppingapp.UiLayer.Screens
+package com.example.shoppingapp.UiLayer.Screens.Home_Screen
 
 import android.util.Log
 import android.widget.Toast
@@ -20,8 +20,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.wrapContentSize
-import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
@@ -50,22 +48,22 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.withStyle
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
 import com.example.shoppingapp.DomainLayer.Model.CartModel
 import com.example.shoppingapp.DomainLayer.Model.TestModel
-import com.example.shoppingapp.R
+import com.example.shoppingapp.UiLayer.Navigation.Routes
 import com.example.shoppingapp.UiLayer.Screens.Cart_Screen.CartViewModel
+import com.example.shoppingapp.UiLayer.Screens.Shipping_Screen.ShippingViewModel
 import com.example.shoppingapp.UiLayer.Screens.Wishlist_Screen.WishListReceiveState
 import com.example.shoppingapp.UiLayer.Screens.Wishlist_Screen.WishlistViewModel
 import com.example.shoppingapp.UiLayer.ViewModel.ShoppingVm
@@ -80,9 +78,14 @@ val addToCartClicked = mutableStateOf(0)
 val quantity = mutableStateOf(0)
 
 @Composable
-fun ProductScreen(productId: String, firebaseAuth: FirebaseAuth) {
+fun ProductScreen(
+    productId: String,
+    firebaseAuth: FirebaseAuth,
+    navController: NavHostController,
+    ShippingVm: ShippingViewModel
+) {
     val context = LocalContext.current
-    //ViewmModel
+    //ViewModel
     val CartVM: CartViewModel = hiltViewModel()
     val WishListVM: WishlistViewModel = hiltViewModel()
     val viewmodel: ShoppingVm = hiltViewModel()
@@ -119,19 +122,15 @@ fun ProductScreen(productId: String, firebaseAuth: FirebaseAuth) {
     val state = viewmodel.productdata.collectAsState()
     when (state.value) {
         is SpecificProduct.Error -> {
-            Log.d("ERROR", "ERR : ")
 
         }
 
         SpecificProduct.Loading -> {
-            Log.d("ERROR", "LOAD: ")
         }
 
         is SpecificProduct.Success -> {
             val product = (state.value as SpecificProduct.Success).product
-            Log.d("DATA", "$product")
             productData.value = product
-            Log.d("SCREENDATA", "${productData.value}")
         }
     }
     Box(modifier = Modifier.fillMaxSize()) {
@@ -271,8 +270,20 @@ fun ProductScreen(productId: String, firebaseAuth: FirebaseAuth) {
                 Spacer(modifier = Modifier.height(8.dp))
                 OutlinedButton(
                     onClick = {
-                        // Cart Code And Move to Cart Screen with Check Out Option
-
+                        // Cart Code And Move to Cart Screen
+                        if (colorSelected.value != "" && sizeSelectedImage.value != "") {
+                            val productInfo = mutableListOf<CartModel>()
+                            productInfo.add(CartModel(productData.value.id,productData.value.name,productData.value.imageUrl,productData.value.discountedPrice,
+                                quantity.value , colorSelected.value , sizeSelectedImage.value))
+                            ShippingVm.PushData(productInfo)
+                            navController.navigate(Routes.Shipping(0))
+                        } else {
+                            Toast.makeText(
+                                context,
+                                "Please Select quantity ,color And Size",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        }
 
                     },
                     modifier = Modifier.fillMaxWidth(),
@@ -284,9 +295,6 @@ fun ProductScreen(productId: String, firebaseAuth: FirebaseAuth) {
                 OutlinedButton(
                     onClick = {
                         //  Cart Code
-                        if (addToCartClicked.value == 1) {
-                            Toast.makeText(context, "Item Already Added", Toast.LENGTH_SHORT).show()
-                        }
                         if (colorSelected.value != "" && sizeSelectedImage.value != "") {
                             CartVM.addtoCart(
                                 userId.toString(),
@@ -303,7 +311,7 @@ fun ProductScreen(productId: String, firebaseAuth: FirebaseAuth) {
                         } else {
                             Toast.makeText(
                                 context,
-                                "Please Select qunatity ,color And Size",
+                                "Please Select quantity ,color And Size",
                                 Toast.LENGTH_SHORT
                             ).show()
                         }
@@ -323,11 +331,10 @@ fun ProductScreen(productId: String, firebaseAuth: FirebaseAuth) {
                         .padding(bottom = 8.dp)
                         .clickable {
                             if (checkWishlist.value == true) {
-                                WishListVM.removetoWishlist(userId,productId)
+                                WishListVM.removetoWishlist(userId, productId)
                                 WishListVM.gettoWishlist(userId, productId)
 
-                            }
-                            else {
+                            } else {
                                 WishListVM.addtoWishList(
                                     userId, CartModel(
                                         productData.value.id,
@@ -337,7 +344,8 @@ fun ProductScreen(productId: String, firebaseAuth: FirebaseAuth) {
                                         quantity.value,
                                         colorSelected.value,
                                         sizeSelectedImage.value
-                                    ))
+                                    )
+                                )
                                 WishListVM.gettoWishlist(userId, productId)
 
 
@@ -345,7 +353,6 @@ fun ProductScreen(productId: String, firebaseAuth: FirebaseAuth) {
 
                         }, horizontalArrangement = Arrangement.Center
                 ) {
-                    Log.d("CHECKSTATE", "${checkWishlist.value}")
                     Icon(
                         imageVector = if (checkWishlist.value == true) {
                             Icons.Default.Favorite
@@ -371,7 +378,6 @@ fun isValidHexCode(hexCode: String): Boolean {
 @Composable
 fun ProductColor(hexCodes: List<String>) {
     val validHexCodes = hexCodes.filter { isValidHexCode(it) }
-    Log.d("HEXVODE", "$validHexCodes")
     LazyRow {
         items(hexCodes) {
             Card(
@@ -385,7 +391,6 @@ fun ProductColor(hexCodes: List<String>) {
                         .background(Color(android.graphics.Color.parseColor(it)))
                         .clickable {
                             colorSelected.value = it
-                            Log.d("SELECTEDCOLOR", "COLOR SELECTED : $it")
                         }
                 )
             }
@@ -409,7 +414,6 @@ fun ProductSize(productSize: List<String>) {
                         .clip(RectangleShape)
                         .clickable {
                             sizeSelectedImage.value = it
-                            Log.d("SELECTEDSIZE", "SIZE SELECTED : $it")
                         }, contentAlignment = Alignment.Center
                 ) {
                     Text(text = " $it")

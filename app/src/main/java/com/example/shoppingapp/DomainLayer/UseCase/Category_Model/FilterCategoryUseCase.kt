@@ -8,7 +8,7 @@ import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
 
 class FilterCategoryUseCase @Inject constructor(val repoImpl: RepoImpl) {
-    fun filterList(categoryName:String):Flow<ResultState<List<TestModel>>>{
+    fun filterList(categoryName:String):Flow<ResultState<List<ProductModel>>>{
         return repoImpl.FilterCategory(categoryName)
     }
 }

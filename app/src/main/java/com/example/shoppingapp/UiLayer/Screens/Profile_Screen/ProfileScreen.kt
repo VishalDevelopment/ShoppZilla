@@ -94,9 +94,7 @@ fun ProfileScreen(
     val ReadOnly by remember {
         derivedStateOf { EditButtonSelected.value == false }
     }
-    Log.d("EDITABLE", "${EditButtonSelected.value}")
 
-    Log.d("READONLY", "${ReadOnly}")
    LaunchedEffect(UpdateResponse.value) {
         when (UpdateResponse.value) {
             is UpdateProfileState.Error -> {
@@ -140,7 +138,6 @@ fun ProfileScreen(
             LaunchedEffect(key1 = true) {
                 val successData = state.value as? UserDetailState.Success
                 successData?.let {
-                    Log.d("USERDATA", "${it.userInfo}")
                     email = it.userInfo.email
                     var fullName = it.userInfo.name
                     fname = fullName.substringBefore(" ")

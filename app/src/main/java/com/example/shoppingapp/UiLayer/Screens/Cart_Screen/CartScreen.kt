@@ -3,6 +3,7 @@ package com.example.shoppingapp.UiLayer.Screens.Cart_Screen
 import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -13,15 +14,18 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.KeyboardArrowLeft
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -41,14 +45,21 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
 import com.example.shoppingapp.DomainLayer.Model.CartModel
 import com.example.shoppingapp.R
-import com.example.shoppingapp.UiLayer.Screens.ShoppingDescription
+import com.example.shoppingapp.UiLayer.Navigation.Routes
+import com.example.shoppingapp.UiLayer.Screens.Shipping_Screen.ShippingViewModel
+import com.example.shoppingapp.ui.theme.Pink80
 import com.google.firebase.auth.FirebaseAuth
 
 @Composable
-fun CartScreen(firebaseAuth: FirebaseAuth) {
+fun CartScreen(
+    firebaseAuth: FirebaseAuth,
+    navController: NavHostController,
+    ShippingVm: ShippingViewModel
+) {
     val context = LocalContext.current
     val CartVM: CartViewModel = hiltViewModel()
     val userId =  firebaseAuth.uid.toString()
@@ -64,7 +75,7 @@ fun CartScreen(firebaseAuth: FirebaseAuth) {
         }
         ReceiveCartState.Loading -> {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center){
-                CircularProgressIndicator()
+                CircularProgressIndicator(color = Pink80)
             }
         }
         is ReceiveCartState.Success -> {
@@ -108,7 +119,7 @@ fun CartScreen(firebaseAuth: FirebaseAuth) {
                     CartItemHead()
                     Column(modifier = Modifier.fillMaxSize(), verticalArrangement = Arrangement.SpaceBetween){
                         Column(Modifier.fillMaxHeight(.90f)){
-                            CartItemList(cartList)
+                            CartItemList(cartList,CartVM,userId)
                             Spacer(modifier = Modifier.padding(3.dp))
                             Box(
                                 modifier = Modifier
@@ -118,8 +129,14 @@ fun CartScreen(firebaseAuth: FirebaseAuth) {
                             )
                         }
                         OutlinedButton(
-                            onClick = { },
-                            modifier = Modifier.fillMaxWidth().padding(bottom = 5.dp),
+                            onClick = {
+                                // Checkout Handle
+                                ShippingVm.PushData(cartList)
+                                navController.navigate(Routes.Shipping(1))
+                            },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(bottom = 5.dp),
                             shape = RoundedCornerShape(15.dp), colors = ButtonDefaults.buttonColors(Color.Gray)
                         ) {
                             Text(text = "Check Out", color = Color.White)
@@ -134,7 +151,7 @@ fun CartScreen(firebaseAuth: FirebaseAuth) {
 }
 
 @Composable
-fun CartItemList(cartList: List<CartModel>) {
+fun CartItemList(cartList: List<CartModel>, CartVM: CartViewModel,uid:String) {
     val cart = remember {
         mutableStateOf(cartList)
     }
@@ -143,7 +160,7 @@ fun CartItemList(cartList: List<CartModel>) {
             Row(horizontalArrangement = Arrangement.SpaceAround,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(vertical = 5.dp)
+                    .padding(vertical = 5.dp).fillMaxHeight(0.13f)
             ) {
                 Row(modifier = Modifier.weight(2f)){
                     Card(
@@ -208,6 +225,11 @@ fun CartItemList(cartList: List<CartModel>) {
                         .padding(vertical = 10.dp)
                         .weight(1f)
                 )
+
+                Icon(imageVector = Icons.Default.Delete, contentDescription =null ,Modifier.fillMaxHeight().size(45.dp).padding(horizontal = 5.dp).clickable {
+                    CartVM.removeToCart(uid,it.id)
+                    CartVM.getProductCart(uid)
+                })
             }
 
         }
@@ -258,3 +280,79 @@ fun CartItemHead(){
         )}
 }
 
+
+@Composable
+fun testUi(){
+    val test = R.drawable.dress1
+    Row(horizontalArrangement = Arrangement.SpaceAround,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 5.dp).fillMaxHeight(0.13f)
+    ) {
+        Row(modifier = Modifier.weight(2f)){
+            Card(
+                modifier = Modifier
+                    .height(100.dp)
+                    .width(60.dp)
+                    .padding(horizontal = 5.dp),
+                shape = RoundedCornerShape(18.dp)
+            ) {
+                Image(
+                    painter = painterResource(id = test),
+                    contentDescription = null,
+                    Modifier.fillMaxSize(), contentScale = ContentScale.Crop
+                )
+            }
+            Column(
+                verticalArrangement = Arrangement.Top,
+                modifier = Modifier.padding(top = 10.dp)
+            ) {
+                Text(
+                    text = "Random Name",
+                    modifier = Modifier
+                        .padding(vertical = 5.dp)
+                        .width(100.dp), fontSize = 10.sp
+                )
+
+                Text(
+                    text = "M",
+                    modifier = Modifier
+                        .padding(vertical = 5.dp),
+                    fontSize = 10.sp
+                )
+
+            }
+        }
+
+        Text(
+            text ="4000",
+            fontSize = 10.sp,
+            textAlign = TextAlign.Center,
+            modifier = Modifier
+                .fillMaxHeight()
+                .padding(vertical = 10.dp)
+                .weight(1f)
+        )
+
+        Text(
+            text = "2",
+            fontSize = 10.sp,
+            textAlign = TextAlign.Center,
+            modifier = Modifier
+                .fillMaxHeight()
+                .padding(vertical = 10.dp)
+                .weight(1f)
+        )
+        Text(
+            text ="4000",
+            fontSize = 10.sp,
+            textAlign = TextAlign.Center,
+            modifier = Modifier
+                .fillMaxHeight()
+                .padding(vertical = 10.dp)
+                .weight(1f)
+        )
+
+
+    }
+}

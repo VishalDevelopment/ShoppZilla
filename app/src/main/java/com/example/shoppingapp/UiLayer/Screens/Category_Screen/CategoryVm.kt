@@ -40,6 +40,6 @@ class CategoryVm @Inject constructor(
 
 sealed class FilterCategoryState(){
     object Loading: FilterCategoryState()
-    data class Success(val filterCategory:List<TestModel>): FilterCategoryState()
+    data class Success(val filterCategory:List<ProductModel>): FilterCategoryState()
     data class Error(val message:String): FilterCategoryState()
 }

@@ -1,9 +1,10 @@
-package com.example.shoppingapp.UiLayer.Screens
+package com.example.shoppingapp.UiLayer.Screens.Home_Screen
 
 import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Box
@@ -79,11 +80,9 @@ fun HomeScreen(navController: NavHostController) {
     val productState = viewmodel.productList.collectAsState()
     when (categorystate.value) {
         is CategoryState.Error -> {
-            Log.d("HOME", "Error")
         }
 
         CategoryState.Loading -> {
-            Log.d("HOME", "LOADING")
 
         }
 
@@ -94,15 +93,12 @@ fun HomeScreen(navController: NavHostController) {
     }
     when(productState.value){
         is ProductState.Error -> {
-            Log.d("PRODUCT", "ERROR : PRODUCT")
         }
         ProductState.Loading -> {
-            Log.d("PRODUCT", "LOADING : PRODUCT")
         }
         is ProductState.Success -> {
             val productList = (productState.value as ProductState.Success).product
             productData.value = productList
-            Log.d("PRODUCT","SUCCESS : $productList")
         }
     }
     Box(modifier = Modifier.fillMaxSize()) {
@@ -110,7 +106,6 @@ fun HomeScreen(navController: NavHostController) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-//                .padding(top = 8.dp)
                 .verticalScroll(rememberScrollState())
         ) {
             SearchBar()
@@ -124,6 +119,7 @@ fun HomeScreen(navController: NavHostController) {
         }
 
     }
+
 }
 
 @Composable
@@ -189,7 +185,9 @@ fun SearchBar() {
 @Composable
 fun Category(categoryData: MutableState<List<CategoryModel>>, navController: NavHostController) {
 
-
+val interactivesource = remember {
+    MutableInteractionSource()
+}
     LazyRow(
         modifier = Modifier
             .fillMaxWidth()
@@ -202,7 +200,14 @@ fun Category(categoryData: MutableState<List<CategoryModel>>, navController: Nav
                     .paint( // Replace with your image id
                         painterResource(id = R.drawable.circle__transparent_),
                         contentScale = ContentScale.FillBounds
-                    ),
+                    )
+                    .clickable(
+                        interactionSource = interactivesource,
+                        indication = null
+                    ) {
+                        val categoryName = it.name
+                        navController.navigate(Routes.Category(categoryName))
+                    },
                 contentAlignment = Alignment.Center
             ) {
                 Row(
@@ -211,7 +216,7 @@ fun Category(categoryData: MutableState<List<CategoryModel>>, navController: Nav
                         .fillMaxWidth(),
                     horizontalArrangement = Arrangement.Center
                 ) {
-                    CategoryItem(it,navController)
+                    CategoryItem(it)
                 }
             }
         }
@@ -220,7 +225,7 @@ fun Category(categoryData: MutableState<List<CategoryModel>>, navController: Nav
 }
 
 @Composable
-fun CategoryItem(categoryModel: CategoryModel, navController: NavHostController) {
+fun CategoryItem(categoryModel: CategoryModel) {
 
 
     Log.d("CATEGORYITEM","${categoryModel.imageUrl}")
@@ -235,10 +240,7 @@ fun CategoryItem(categoryModel: CategoryModel, navController: NavHostController)
         error = error,
         contentDescription = "Categories",
         contentScale = ContentScale.Inside,
-        modifier = Modifier.size(55.dp).clickable {
-            val categoryName = categoryModel.name
-            navController.navigate(Routes.Category(categoryName))
-        }
+        modifier = Modifier.size(55.dp)
     )
 
 }
@@ -256,7 +258,6 @@ data class ShoppingDescription(
 fun ShoppingList(product: List<ProductModel>, navController: NavHostController) {
 
     val dressDescription = product
-Log.d("SHOPPINGLIST","$dressDescription")
     LazyRow {
         items(dressDescription) {
             DressImage(it,navController)
@@ -278,7 +279,6 @@ fun DressImage(dress: ProductModel, navController: NavHostController) {
 
     Column(horizontalAlignment = Alignment.CenterHorizontally,modifier =Modifier.clickable {
         // Navigate to Product Screen
-        Toast.makeText(Context, "Product Name : ${dress.name}", Toast.LENGTH_SHORT).show()
         navController.navigate(Routes.ProductDetail(dress.id))
 
     }) {

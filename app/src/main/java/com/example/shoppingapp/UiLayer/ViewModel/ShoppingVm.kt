@@ -1,6 +1,5 @@
 package com.example.shoppingapp.UiLayer.ViewModel
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.shoppingapp.CommonState.ResultState
@@ -9,11 +8,11 @@ import com.example.shoppingapp.DomainLayer.Model.LoginModel
 import com.example.shoppingapp.DomainLayer.Model.ProductModel
 import com.example.shoppingapp.DomainLayer.Model.SignUpModel
 import com.example.shoppingapp.DomainLayer.Model.TestModel
-import com.example.shoppingapp.DomainLayer.UseCase.LoginUserUseCase
-import com.example.shoppingapp.DomainLayer.UseCase.RegisterUserUserCase
+import com.example.shoppingapp.DomainLayer.UseCase.Auth_UseCase.LoginUserUseCase
+import com.example.shoppingapp.DomainLayer.UseCase.Auth_UseCase.RegisterUserUserCase
 import com.example.shoppingapp.DomainLayer.UseCase.Category_Model.getCategoryUseCase
-import com.example.shoppingapp.DomainLayer.UseCase.getProductUseCase
-import com.example.shoppingapp.DomainLayer.UseCase.getSpecificProductUseCase
+import com.example.shoppingapp.DomainLayer.UseCase.Product_UseCase.getProductUseCase
+import com.example.shoppingapp.DomainLayer.UseCase.Product_UseCase.getSpecificProductUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -63,18 +62,14 @@ class ShoppingVm @Inject constructor(
                 when (it) {
                     is ResultState.Error -> {
                         _loginState.value = LoginState.Error(it.error)
-                        Log.d("VM", "ERR : ")
-
                     }
 
                     is ResultState.Loading -> {
                         _loginState.value = LoginState.Loading
-                        Log.d("VM", "LOAD : ")
                     }
 
                     is ResultState.Success -> {
                         _loginState.value = LoginState.Succes
-                        Log.d("VM", "SUCC : ")
                     }
                 }
             }
@@ -95,7 +90,6 @@ class ShoppingVm @Inject constructor(
                     }
 
                     is ResultState.Success -> {
-                        Log.d("CATEGORYVM", "${it.data}")
                         CategoriesData.value = CategoryState.Succes(it.data)
                     }
                 }

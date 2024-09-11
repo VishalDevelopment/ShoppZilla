@@ -4,8 +4,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.shoppingapp.CommonState.ResultState
 import com.example.shoppingapp.DomainLayer.Model.CartModel
-import com.example.shoppingapp.DomainLayer.UseCase.addProductCart
-import com.example.shoppingapp.DomainLayer.UseCase.getProductcart
+import com.example.shoppingapp.DomainLayer.UseCase.Cart_UseCase.RemoveToCartUseCase
+import com.example.shoppingapp.DomainLayer.UseCase.Cart_UseCase.addProductCart
+import com.example.shoppingapp.DomainLayer.UseCase.Cart_UseCase.getProductcart
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.collectLatest
@@ -15,7 +16,8 @@ import javax.inject.Inject
 @HiltViewModel
 class CartViewModel @Inject constructor(
     val addProductCart: addProductCart,
-    val getProductcart: getProductcart
+    val getProductcart: getProductcart,
+    val removetoCart: RemoveToCartUseCase
 ) :ViewModel(){
 
     val _cartResponse = MutableStateFlow<CartState>(CartState.Loading)
@@ -59,10 +61,25 @@ class CartViewModel @Inject constructor(
         }
     }
 
-
-
-
-
+    val _removeResponse = MutableStateFlow<CartState>(CartState.Loading)
+    val removeResponse = _removeResponse
+    fun removeToCart(uid:String , productId:String){
+        viewModelScope.launch {
+            removetoCart.RemoveToCart(uid, productId).collectLatest {
+                when(it){
+                    is ResultState.Error -> {
+                        _removeResponse.value = CartState.Error(it.error)
+                    }
+                    is ResultState.Loading -> {
+                        _removeResponse.value = CartState.Loading
+                    }
+                    is ResultState.Success -> {
+                        _removeResponse.value = CartState.Success(it.data)
+                    }
+                }
+            }
+        }
+    }
 }
 
 sealed class CartState(){
