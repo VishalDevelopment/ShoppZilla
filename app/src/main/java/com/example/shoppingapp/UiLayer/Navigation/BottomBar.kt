@@ -1,5 +1,12 @@
 package com.example.shoppingapp.UiLayer.Navigation
 
+import androidx.compose.animation.AnimatedContentTransitionScope
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
+import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.height
@@ -26,10 +33,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavDestination.Companion.hierarchy
-import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -41,6 +49,7 @@ import com.example.shoppingapp.UiLayer.Screens.Category_Screen.CategoryScreen
 import com.example.shoppingapp.UiLayer.Screens.Home_Screen.HomeScreen
 import com.example.shoppingapp.UiLayer.Screens.Home_Screen.ProductScreen
 import com.example.shoppingapp.UiLayer.Screens.Profile_Screen.ProfileScreen
+import com.example.shoppingapp.UiLayer.Screens.PurchaseFinishScreen
 import com.example.shoppingapp.UiLayer.Screens.Shipping_Screen.ShippingScreen
 import com.example.shoppingapp.UiLayer.Screens.Shipping_Screen.ShippingViewModel
 import com.example.shoppingapp.UiLayer.Screens.Wishlist_Screen.WishlistScreen
@@ -53,54 +62,75 @@ data class BottomItem(
     val title: String,
     val selectedImg: ImageVector,
     val unselectedImg: ImageVector,
-    var navigate : Any
+    var navigate: Any,
 )
 
 @Composable
 
-fun BottomBar(firebaseAuth: FirebaseAuth,MainNavHost:NavHostController) {
+fun BottomBar(firebaseAuth: FirebaseAuth, MainNavHost: NavHostController) {
     val navController = rememberNavController()
-    val ShippingVm:ShippingViewModel = hiltViewModel()
+    val ShippingVm: ShippingViewModel = hiltViewModel()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = navBackStackEntry?.destination
     val items = listOf(
-        BottomItem("Home", Icons.Default.Home, Icons.Outlined.Home,Routes.Home),
-        BottomItem("Wishlist", Icons.Default.Favorite, Icons.Outlined.FavoriteBorder,Routes.Wishlist),
-        BottomItem("Cart", Icons.Default.ShoppingCart, Icons.Outlined.ShoppingCart,Routes.Cart),
-        BottomItem("Profile", Icons.Default.AccountCircle, Icons.Outlined.AccountCircle,Routes.Profile)
+        BottomItem("Home", Icons.Default.Home, Icons.Outlined.Home, Routes.Home),
+        BottomItem(
+            "Wishlist",
+            Icons.Default.Favorite,
+            Icons.Outlined.FavoriteBorder,
+            Routes.Wishlist
+        ),
+        BottomItem("Cart", Icons.Default.ShoppingCart, Icons.Outlined.ShoppingCart, Routes.Cart),
+        BottomItem(
+            "Profile",
+            Icons.Default.AccountCircle,
+            Icons.Outlined.AccountCircle,
+            Routes.Profile
+        )
     )
+    var isVisible = remember {
+        mutableStateOf(true)
+    }
+    val animationSpec = tween<IntSize>(durationMillis = 300, easing = LinearEasing)
+
 
     var selectedItem by remember {
         mutableStateOf(
-            BottomItem("Home", Icons.Default.Home, Icons.Outlined.Home,Routes.Home),
+            BottomItem("Home", Icons.Default.Home, Icons.Outlined.Home, Routes.Home),
         )
     }
     Scaffold(
-        bottomBar = {
-            BottomAppBar(
-                containerColor = Pink80,
-                modifier = Modifier.height(50.dp),
-                windowInsets = WindowInsets(0.dp)
-            ) {
-                items.forEachIndexed{ index , barItem ->
-                    val selected= currentDestination?.hierarchy?.any(){ it.route == barItem.navigate::class.qualifiedName } == true
-                    NavigationBarItem(
-                        selected = barItem == selectedItem,
-                        onClick = {
-                           selectedItem = barItem
+            bottomBar = {
+                if (isVisible.value){
+                BottomAppBar(
+                    containerColor = Pink80,
+                    modifier = Modifier.height(50.dp).animateContentSize(animationSpec)
+                    ,
+                    windowInsets = WindowInsets(0.dp)
+                ) {
+                    items.forEachIndexed { index, barItem ->
+                        val selected =
+                            currentDestination?.hierarchy?.any() { it.route == barItem.navigate::class.qualifiedName } == true
+                        NavigationBarItem(
+                            selected = barItem == selectedItem,
+                            onClick = {
+                                selectedItem = barItem
 
-                        },
-                        icon = {
-                            Icon(
-                                imageVector = if (selectedItem == barItem) {
-                                    barItem.selectedImg
-                                } else {
-                                    barItem.unselectedImg
-                                }, contentDescription = null
+                            },
+                            icon = {
+                                Icon(
+                                    imageVector = if (selectedItem == barItem) {
+                                        barItem.selectedImg
+                                    } else {
+                                        barItem.unselectedImg
+                                    }, contentDescription = null
+                                )
+                            }, colors = NavigationBarItemColors(
+                                Color.Black, Color.Black,
+                                LitePink, Color.Black, Color.Black, Color.Black, Color.Black
                             )
-                        }, colors = NavigationBarItemColors(Color.Black,Color.Black,
-                            LitePink,Color.Black,Color.Black,Color.Black,Color.Black)
-                    )
+                        )
+                    }
                 }
             }
         }
@@ -108,39 +138,86 @@ fun BottomBar(firebaseAuth: FirebaseAuth,MainNavHost:NavHostController) {
         Box(modifier = Modifier.padding(it)) {
             NavHost(navController = navController, startDestination = selectedItem.navigate) {
                 composable<Routes.Home> {
+                    isVisible.value = true
                     HomeScreen(navController)
                 }
                 composable<Routes.Wishlist> {
-                    WishlistScreen(firebaseAuth)
-                }
-                composable<Routes.Cart> {
-                    CartScreen(firebaseAuth,navController,ShippingVm)
-                }
-                composable<Routes.Profile> {
-                    ProfileScreen(firebaseAuth = firebaseAuth){
-                            MainNavHost.navigate(Routes.Auth) {
-                                popUpTo(route = Routes.Main) {
-                                    inclusive = true
-                                }
-                            }
+                    isVisible.value = true
+
+                    WishlistScreen(firebaseAuth){
+                        selectedItem = BottomItem("Home", Icons.Default.Home, Icons.Outlined.Home, Routes.Home)
                         }
                 }
+                composable<Routes.Cart> {
+                    isVisible.value = true
 
-                composable<Routes.ProductDetail>{
-                    val  productId = it.toRoute<Routes.ProductDetail>()
-                    ProductScreen(productId.productId, firebaseAuth,navController,ShippingVm)
+                    CartScreen(firebaseAuth, navController, ShippingVm){
+                        selectedItem = BottomItem("Home", Icons.Default.Home, Icons.Outlined.Home, Routes.Home)
+                    }
+                }
+                composable<Routes.Profile> {
+                    isVisible.value = true
+
+                    ProfileScreen(firebaseAuth = firebaseAuth, {
+                        MainNavHost.navigate(Routes.Auth,) {
+                            popUpTo(route = Routes.Main) {
+                                inclusive = true
+                            }
+                        }
+                    },{
+                        selectedItem = BottomItem("Home", Icons.Default.Home, Icons.Outlined.Home, Routes.Home)
+                    })
+                }
+
+                composable<Routes.ProductDetail> {
+                    isVisible.value = false
+                    val productId = it.toRoute<Routes.ProductDetail>()
+                    ProductScreen(productId.productId, firebaseAuth, navController, ShippingVm)
                 }
 
                 composable<Routes.Category> {
+                    isVisible.value = false
+
                     val CategoryName = it.toRoute<Routes.Category>()
-                    CategoryScreen(CategoryName.categoryName,navController)
+                    CategoryScreen(CategoryName.categoryName, navController)
                 }
 
-                composable<Routes.Shipping>{
+                composable<Routes.Shipping>(
+                    enterTransition = ::slideInAnim,
+                    exitTransition = ::slideOutAnim) {
+                    isVisible.value = false
+
                     val productList = it.toRoute<Routes.Shipping>()
-                    ShippingScreen(productList.Flag,ShippingVm,firebaseAuth)
+                    ShippingScreen(productList.Flag, ShippingVm, firebaseAuth, navController)
+                }
+                composable<Routes.Checkout>(
+                    enterTransition = ::slideInAnim,
+                    exitTransition = ::slideOutAnim
+                ) {
+                    isVisible.value = false
+                    PurchaseFinishScreen(navController) {
+                        navController.navigate(Routes.Home) {
+                            popUpTo(route = Routes.Checkout) {
+                                inclusive = true
+                            }
+                        }
+                    }
                 }
             }
         }
     }
+}
+
+fun slideInAnim(scope: AnimatedContentTransitionScope<NavBackStackEntry>): EnterTransition {
+    return scope.slideIntoContainer(
+        AnimatedContentTransitionScope.SlideDirection.Right,
+        animationSpec = tween(300)
+    )
+}
+
+fun slideOutAnim(scope :AnimatedContentTransitionScope<NavBackStackEntry>):ExitTransition{
+    return scope.slideOutOfContainer(
+        AnimatedContentTransitionScope.SlideDirection.Left,
+        animationSpec = tween(300)
+    )
 }

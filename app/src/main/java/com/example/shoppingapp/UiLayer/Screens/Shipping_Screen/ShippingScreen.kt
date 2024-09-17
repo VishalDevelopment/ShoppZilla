@@ -1,6 +1,8 @@
 package com.example.shoppingapp.UiLayer.Screens.Shipping_Screen
 
 
+import android.app.Activity
+import android.content.Context
 import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -42,22 +44,38 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
 import com.example.shoppingapp.DomainLayer.Model.AddressModel
 import com.example.shoppingapp.DomainLayer.Model.CartModel
 import com.example.shoppingapp.DomainLayer.Model.OrderForm
+import com.example.shoppingapp.UiLayer.Navigation.Routes
 import com.example.shoppingapp.UiLayer.Screens.Cart_Screen.CartViewModel
 import com.example.shoppingapp.ui.theme.Pink80
 import com.google.firebase.auth.FirebaseAuth
+import com.razorpay.Checkout
+import org.json.JSONObject
 
 @Composable
-fun ShippingScreen(flag: Int, ShippingVm: ShippingViewModel, firebaseAuth: FirebaseAuth) {
+fun ShippingScreen(
+    flag: Int,
+    ShippingVm: ShippingViewModel,
+    firebaseAuth: FirebaseAuth,
+    navController: NavHostController
+) {
 
+    //RazorPay
+    Checkout.preload(LocalContext.current)
+    val checkout = Checkout()
+    checkout.setKeyID("rzp_test_Nqy8gnPWtyPySL")
+
+    val context = LocalContext.current
     val uid = firebaseAuth.uid.toString()
     val CartVM: CartViewModel = hiltViewModel()
     val ShippingProduct = ShippingVm.shippingList
@@ -150,45 +168,29 @@ fun ShippingScreen(flag: Int, ShippingVm: ShippingViewModel, firebaseAuth: Fireb
                                     )
                                     ShippingVm.placeOrder(orderForm)
                                 }
+                                navController.navigate(Routes.Checkout){
+                                    popUpTo(0){
+                                        inclusive = true
+                                    }
+                                }
                             } else {
                                 //  Then Place Order Only
                                 ShippingProduct.value.forEach {
                                     val orderForm = OrderForm(
                                         uid,
-                                        CartModel(
-                                            it.id,
-                                            it.name,
-                                            it.imageUrl,
-                                            it.price,
-                                            it.quantity,
-                                            it.color,
-                                            it.size
-                                        ),
+                                        CartModel(it.id, it.name, it.imageUrl, it.price, it.quantity, it.color, it.size),
                                         Address.value
                                     )
                                     ShippingVm.placeOrder(orderForm)
+                                }
+                                navController.navigate(Routes.Checkout){
+                                    popUpTo(route = Routes.Home)
                                 }
                             }
 
                         }
                         if (PaymentFlag.value == 1) {
-                            ShippingProduct.value.forEach {
-                                val orderForm = OrderForm(
-                                    uid,
-                                    CartModel(
-                                        it.id,
-                                        it.name,
-                                        it.imageUrl,
-                                        it.price,
-                                        it.quantity,
-                                        it.color,
-                                        it.size
-                                    ),
-                                    Address.value
-                                )
-                                ShippingVm.placeOrder(orderForm)
-                            }
-
+                            initPayment(checkout,context)
                         }
                     },
                     modifier = Modifier.fillMaxWidth(),
@@ -207,8 +209,12 @@ fun ShippingScreen(flag: Int, ShippingVm: ShippingViewModel, firebaseAuth: Fireb
 fun ProductList(shippingProduct: List<CartModel>) {
     val dressDescription = shippingProduct
 
+    val TotalPrice = remember{
+        mutableStateOf(0.00)
+    }
     Column(modifier = Modifier.fillMaxWidth()) {
         dressDescription.forEach {
+            TotalPrice.value = TotalPrice.value + it.price.toFloat()
             Column(modifier = Modifier.fillMaxWidth()) {
                 Row(modifier = Modifier.fillMaxWidth()) {
                     Card(
@@ -330,33 +336,46 @@ fun PersoanlInformation(
 ) {
     Log.d("PERSONALINFO","PIF : $addressData ")
     var email by remember {
-        mutableStateOf(addressData.email)
+        mutableStateOf("")
     }
+
     Log.d("PERSONALINFO","PIF Email : ${addressData.email} ")
     Log.d("PERSONALINFO"," PIFEmail : $email ")
     var country by remember {
-        mutableStateOf(addressData.country)
+        mutableStateOf("")
     }
     var fname by remember {
-        mutableStateOf(addressData.fname)
+        mutableStateOf("")
     }
     var lname by remember {
-        mutableStateOf(addressData.lname)
+        mutableStateOf("")
     }
     var address by remember {
-        mutableStateOf(addressData.address)
+        mutableStateOf("")
     }
     var city by remember {
-        mutableStateOf(addressData.city)
+        mutableStateOf("")
     }
     var pincode by remember {
-        mutableStateOf(addressData.pincCode)
+        mutableStateOf("")
     }
     var phoneNo by remember {
-        mutableStateOf(addressData.phoneNO)
+        mutableStateOf("")
     }
     var ischeck by remember {
         mutableStateOf(false)
+    }
+
+    LaunchedEffect(key1 = addressData) {
+        email = addressData.email
+    address =addressData.address
+    country = addressData.country
+    fname  = addressData.fname
+    lname=addressData.lname
+    city = addressData.city
+    pincode = addressData.pincCode
+    phoneNo = addressData.phoneNO
+
     }
 
     LaunchedEffect(address, phoneNo, ischeck) {
@@ -535,4 +554,36 @@ fun PersoanlInformation(
 
 
     }
+}
+
+
+fun initPayment(checkout: Checkout, context: Context){
+    try {
+        val options = JSONObject()
+        options.put("name","Vishal General Store")
+        options.put("description","Thanks For Shopping ")
+        //You can omit the image option to fetch the image from the dashboard
+        options.put("image","http://example.com/image/rzp.jpg")
+        options.put("theme.color", "#3399cc");
+        options.put("currency","INR");
+        options.put("order_id", "order_DBJOWzybf0sJbb");
+        options.put("amount","50000")//pass amount in currency subunits
+
+//        val retryObj =  JSONObject()
+//        retryObj.put("enabled", true);
+//        retryObj.put("max_count", 4);
+//        options.put("retry", retryObj);
+
+        val prefill = JSONObject()
+        prefill.put("email","gaurav.kumar@example.com")
+        prefill.put("contact","9876543210")
+
+        options.put("prefill",prefill)
+        checkout.open(context as Activity?,options)
+    }catch (e: Exception){
+//        Toast.makeText(context,"Error in payment: "+ e.message, Toast.LENGTH_LONG).show()
+        Log.d("ERROR","${e.message}")
+        e.printStackTrace()
+    }
+
 }

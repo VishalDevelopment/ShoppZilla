@@ -1,5 +1,8 @@
 package com.example.shoppingapp.UiLayer.ViewModel
 
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.shoppingapp.CommonState.ResultState
@@ -13,7 +16,11 @@ import com.example.shoppingapp.DomainLayer.UseCase.Auth_UseCase.RegisterUserUser
 import com.example.shoppingapp.DomainLayer.UseCase.Category_Model.getCategoryUseCase
 import com.example.shoppingapp.DomainLayer.UseCase.Product_UseCase.getProductUseCase
 import com.example.shoppingapp.DomainLayer.UseCase.Product_UseCase.getSpecificProductUseCase
+import com.example.shoppingapp.UiLayer.Navigation.Routes
+import com.example.shoppingapp.UiLayer.Navigation.startDestination
+import com.google.firebase.auth.FirebaseAuth
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -28,8 +35,25 @@ class ShoppingVm @Inject constructor(
 
     private val getCategoryUseCase: getCategoryUseCase,
     private val getProductUseCase: getProductUseCase,
-    private val getSpecificProductUseCase: getSpecificProductUseCase
+    private val getSpecificProductUseCase: getSpecificProductUseCase,
+    val firebaseAuth: FirebaseAuth,
 ) : ViewModel() {
+
+
+    var splash by mutableStateOf(true)
+
+    init {
+        viewModelScope.launch {
+        val user = firebaseAuth.currentUser == null
+            if (user == null) {
+                startDestination=   Routes.Auth
+            } else  {
+                startDestination=  Routes.Main
+            }
+            delay(500)
+            splash = false
+        }
+    }
 
     val _signupState = MutableStateFlow(SignupScreenState())
     val signupState = _signupState.asStateFlow()
@@ -121,16 +145,18 @@ class ShoppingVm @Inject constructor(
 
     private val _productdata = MutableStateFlow<SpecificProduct>(SpecificProduct.Loading)
     val productdata = _productdata
-    fun getSpecificProduct(productID:String){
+    fun getSpecificProduct(productID: String) {
         viewModelScope.launch {
             getSpecificProductUseCase.getSpecificProduct(productID).collectLatest {
-                when(it){
+                when (it) {
                     is ResultState.Error -> {
                         _productdata.value = SpecificProduct.Error(it.error)
                     }
+
                     is ResultState.Loading -> {
                         _productdata.value = SpecificProduct.Loading
                     }
+
                     is ResultState.Success -> {
                         _productdata.value = SpecificProduct.Success(it.data)
                     }
@@ -140,13 +166,12 @@ class ShoppingVm @Inject constructor(
     }
 
 
-
 }
 
-sealed class SpecificProduct{
+sealed class SpecificProduct {
     class Success(val product: TestModel) : SpecificProduct()
     class Error(message: String) : SpecificProduct()
-    object Loading :SpecificProduct()
+    object Loading : SpecificProduct()
 }
 
 sealed class ProductState {
@@ -166,8 +191,6 @@ sealed class LoginState {
     class Error(message: String) : LoginState()
     object Loading : LoginState()
 }
-
-
 
 
 data class SignupScreenState(

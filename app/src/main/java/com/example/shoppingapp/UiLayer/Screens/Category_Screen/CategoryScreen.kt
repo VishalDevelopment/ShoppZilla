@@ -48,23 +48,26 @@ import com.example.shoppingapp.ui.theme.Pink80
 @Composable
 
 fun CategoryScreen(categoryName: String, navController: NavHostController) {
-    val CATEGORYVM:CategoryVm = hiltViewModel()
-    LaunchedEffect(key1 = Unit){
+    val CATEGORYVM: CategoryVm = hiltViewModel()
+    LaunchedEffect(key1 = Unit) {
         CATEGORYVM.filterCategory(categoryName)
     }
     val filterCategoryList = CATEGORYVM.filterCategory.collectAsState()
     var FilterCategoryData = remember {
         mutableStateOf(emptyList<ProductModel>())
     }
-    when(filterCategoryList.value){
+    when (filterCategoryList.value) {
         is FilterCategoryState.Error -> {
 
         }
+
         FilterCategoryState.Loading -> {
-            CircularProgressIndicator()
+            Box(contentAlignment = Alignment.Center) { CircularProgressIndicator() }
         }
+
         is FilterCategoryState.Success -> {
-            val filterData = (filterCategoryList.value as FilterCategoryState.Success).filterCategory
+            val filterData =
+                (filterCategoryList.value as FilterCategoryState.Success).filterCategory
             FilterCategoryData.value = filterData
 
 
@@ -74,7 +77,7 @@ fun CategoryScreen(categoryName: String, navController: NavHostController) {
                     .padding(horizontal = 10.dp),
                 contentAlignment = Alignment.Center
             ) {
-                Column(){
+                Column() {
                     Text(
                         text = "$categoryName",
                         modifier = Modifier
@@ -86,8 +89,8 @@ fun CategoryScreen(categoryName: String, navController: NavHostController) {
                         fontWeight = FontWeight.SemiBold
                     )
                     LazyVerticalGrid(columns = GridCells.Fixed(2)) {
-                        items(FilterCategoryData.value){
-                            CategoryGrid(it,navController)
+                        items(FilterCategoryData.value) {
+                            CategoryGrid(it, navController)
                         }
                     }
                 }
@@ -105,10 +108,13 @@ fun CategoryGrid(productModel: ProductModel, navController: NavHostController) {
         modifier = Modifier
             .height(310.dp)
             .width(150.dp)
-            .padding(horizontal = 8.dp, vertical = 8.dp).clickable { 
+            .padding(horizontal = 8.dp, vertical = 8.dp)
+            .clickable {
                 navController.navigate(Routes.ProductDetail(productModel.id))
-            }, shape = RoundedCornerShape(20.dp)
-        , colors = CardDefaults.cardColors(Color.Transparent), border = BorderStroke(1.dp,Color.Black)
+            },
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(Color.Transparent),
+        border = BorderStroke(1.dp, Color.Black)
     ) {
         Column(
             modifier = Modifier.fillMaxSize(),
@@ -122,7 +128,7 @@ fun CategoryGrid(productModel: ProductModel, navController: NavHostController) {
                     .padding(top = 10.dp)
             ) {
                 AsyncImage(
-                   model = productModel.imageUrl,
+                    model = productModel.imageUrl,
                     contentDescription = null,
                     contentScale = ContentScale.Crop,
                     modifier = Modifier.fillMaxSize()
@@ -136,11 +142,17 @@ fun CategoryGrid(productModel: ProductModel, navController: NavHostController) {
                 fontFamily = FontFamily.SansSerif,
                 fontWeight = FontWeight.SemiBold,
                 textAlign = TextAlign.Center,
-               modifier =  Modifier.fillMaxWidth().padding(horizontal = 2.dp)
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 2.dp)
             )
             Spacer(modifier = Modifier.height(3.dp))
 
-            Column(Modifier.fillMaxWidth().padding(horizontal = 5.dp), horizontalAlignment = Alignment.Start){
+            Column(
+                Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 5.dp), horizontalAlignment = Alignment.Start
+            ) {
                 Text(
                     text = "Rs ${productModel.discountedPrice}",
                     modifier = Modifier.padding(horizontal = 5.dp),
@@ -163,7 +175,7 @@ fun CategoryGrid(productModel: ProductModel, navController: NavHostController) {
                 }
             }
         }
-        }
     }
+}
 
 

@@ -1,7 +1,7 @@
 package com.example.shoppingapp.UiLayer.Screens.Profile_Screen
 
-import android.util.Log
 import android.widget.Toast
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.border
@@ -53,10 +53,7 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.shoppingapp.DomainLayer.Model.ProfileComponents
 import com.example.shoppingapp.DomainLayer.Model.ProfileModel
-import com.example.shoppingapp.DomainLayer.Model.SignUpModel
-import com.example.shoppingapp.DomainLayer.Model.UserParentData
 import com.example.shoppingapp.R
-import com.example.shoppingapp.UiLayer.ViewModel.ShoppingVm
 import com.example.shoppingapp.ui.theme.Pink80
 import com.google.firebase.auth.FirebaseAuth
 
@@ -70,7 +67,11 @@ var isDialog by mutableStateOf(false)
 fun ProfileScreen(
     firebaseAuth: FirebaseAuth,
     navHostController: () -> Unit,
+    backClick: () -> Unit,
 ) {
+    BackHandler {
+        backClick()
+    }
     val context = LocalContext.current
     val ProfileVM: ProfileViewModel = hiltViewModel()
     val uid = firebaseAuth.uid.toString()

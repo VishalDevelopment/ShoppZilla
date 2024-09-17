@@ -26,6 +26,7 @@ import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedTextField
@@ -84,11 +85,34 @@ fun HomeScreen(navController: NavHostController) {
 
         CategoryState.Loading -> {
 
+            Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()){
+                CircularProgressIndicator(color = Pink80)
+            }
+
         }
 
         is CategoryState.Succes -> {
                val categoryList = (categorystate.value as CategoryState.Succes).category// Access the list
             categoryData.value = categoryList
+
+            Box(modifier = Modifier.fillMaxSize()) {
+
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .verticalScroll(rememberScrollState())
+                ) {
+                    SearchBar()
+                    Spacer(modifier = Modifier.padding(vertical = 5.dp))
+                    OptionHead("Categories", "See More")
+                    Spacer(modifier = Modifier.padding(vertical = 5.dp))
+                    Category(categoryData,navController)
+                    Spacer(modifier = Modifier.padding(vertical = 5.dp))
+                    OptionHead(title = "Flash Sale", moreData = "See More")
+                    ShoppingList(productData.value,navController)
+                }
+
+            }
     }
     }
     when(productState.value){
@@ -101,24 +125,7 @@ fun HomeScreen(navController: NavHostController) {
             productData.value = productList
         }
     }
-    Box(modifier = Modifier.fillMaxSize()) {
 
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-        ) {
-            SearchBar()
-            Spacer(modifier = Modifier.padding(vertical = 5.dp))
-            OptionHead("Categories", "See More")
-            Spacer(modifier = Modifier.padding(vertical = 5.dp))
-            Category(categoryData,navController)
-            Spacer(modifier = Modifier.padding(vertical = 5.dp))
-            OptionHead(title = "Flash Sale", moreData = "See More")
-            ShoppingList(productData.value,navController)
-        }
-
-    }
 
 }
 

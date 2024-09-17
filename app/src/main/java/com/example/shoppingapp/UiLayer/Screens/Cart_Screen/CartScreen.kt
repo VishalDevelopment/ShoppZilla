@@ -1,6 +1,7 @@
 package com.example.shoppingapp.UiLayer.Screens.Cart_Screen
 
 import android.widget.Toast
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -58,8 +59,12 @@ import com.google.firebase.auth.FirebaseAuth
 fun CartScreen(
     firebaseAuth: FirebaseAuth,
     navController: NavHostController,
-    ShippingVm: ShippingViewModel
+    ShippingVm: ShippingViewModel,
+    backClick: () -> Unit
 ) {
+    BackHandler {
+        backClick()
+    }
     val context = LocalContext.current
     val CartVM: CartViewModel = hiltViewModel()
     val userId =  firebaseAuth.uid.toString()
@@ -160,7 +165,8 @@ fun CartItemList(cartList: List<CartModel>, CartVM: CartViewModel,uid:String) {
             Row(horizontalArrangement = Arrangement.SpaceAround,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(vertical = 5.dp).fillMaxHeight(0.13f)
+                    .padding(vertical = 5.dp)
+                    .fillMaxHeight(0.13f)
             ) {
                 Row(modifier = Modifier.weight(2f)){
                     Card(
@@ -226,10 +232,15 @@ fun CartItemList(cartList: List<CartModel>, CartVM: CartViewModel,uid:String) {
                         .weight(1f)
                 )
 
-                Icon(imageVector = Icons.Default.Delete, contentDescription =null ,Modifier.fillMaxHeight().size(45.dp).padding(horizontal = 5.dp).clickable {
-                    CartVM.removeToCart(uid,it.id)
-                    CartVM.getProductCart(uid)
-                })
+                Icon(imageVector = Icons.Default.Delete, contentDescription =null ,
+                    Modifier
+                        .fillMaxHeight()
+                        .size(45.dp)
+                        .padding(horizontal = 5.dp)
+                        .clickable {
+                            CartVM.removeToCart(uid, it.id)
+                            CartVM.getProductCart(uid)
+                        })
             }
 
         }
@@ -287,7 +298,8 @@ fun testUi(){
     Row(horizontalArrangement = Arrangement.SpaceAround,
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 5.dp).fillMaxHeight(0.13f)
+            .padding(vertical = 5.dp)
+            .fillMaxHeight(0.13f)
     ) {
         Row(modifier = Modifier.weight(2f)){
             Card(

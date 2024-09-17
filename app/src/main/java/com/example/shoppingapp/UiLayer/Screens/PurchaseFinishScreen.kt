@@ -1,5 +1,6 @@
 package com.example.shoppingapp.UiLayer.Screens
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -16,25 +17,39 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavHostController
 import com.example.shoppingapp.R
 import com.example.shoppingapp.ui.theme.Pink80
 
 @Composable
-@Preview(showSystemUi = true)
-fun PurchaseFinishScreen() {
+
+fun PurchaseFinishScreen(navController: NavHostController, popAllBackScreen: () -> Unit) {
+
+    BackHandler {
+        popAllBackScreen()
+    }
     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        Column(Modifier.fillMaxWidth().padding(horizontal = 10.dp), horizontalAlignment = Alignment.CenterHorizontally){
+        Column(
+            Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 10.dp), horizontalAlignment = Alignment.CenterHorizontally){
             Image(
                 painter = painterResource(id = R.drawable.success_icon),
-                contentDescription = null,Modifier.padding(vertical = 8.dp).size(160.dp)
+                contentDescription = null,
+                Modifier
+                    .padding(vertical = 8.dp)
+                    .size(160.dp)
             )
             Text(text = "Successful Purchase!", fontSize = 20.sp)
             OutlinedButton(
-                onClick = { },
-                modifier = Modifier.fillMaxWidth().padding(vertical = 10.dp),
+                onClick = {
+                   popAllBackScreen()
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 10.dp),
                 shape = RoundedCornerShape(12.dp), colors = ButtonDefaults.buttonColors(Pink80)
             ) {
                 Text(text = "Continue Shopping", color = Color.White)

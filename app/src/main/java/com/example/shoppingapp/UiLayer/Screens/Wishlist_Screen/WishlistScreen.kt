@@ -1,6 +1,6 @@
 package com.example.shoppingapp.UiLayer.Screens.Wishlist_Screen
 
-import android.util.Log
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -35,7 +35,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -47,8 +46,11 @@ import com.google.firebase.auth.FirebaseAuth
 
 @Composable
 //@Preview(showSystemUi = true)
-fun WishlistScreen(firebaseAuth: FirebaseAuth) {
+fun WishlistScreen(firebaseAuth: FirebaseAuth, backClick: () -> Unit) {
 
+    BackHandler {
+        backClick()
+    }
     //UserID
     val userId = firebaseAuth.uid.toString()
     //ViewModel
