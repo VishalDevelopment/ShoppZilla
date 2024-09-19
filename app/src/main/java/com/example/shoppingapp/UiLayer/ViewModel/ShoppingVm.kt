@@ -1,5 +1,6 @@
 package com.example.shoppingapp.UiLayer.ViewModel
 
+import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -19,6 +20,7 @@ import com.example.shoppingapp.DomainLayer.UseCase.Product_UseCase.getSpecificPr
 import com.example.shoppingapp.UiLayer.Navigation.Routes
 import com.example.shoppingapp.UiLayer.Navigation.startDestination
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseUser
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -44,10 +46,13 @@ class ShoppingVm @Inject constructor(
 
     init {
         viewModelScope.launch {
-        val user = firebaseAuth.currentUser == null
+        val user: FirebaseUser? = firebaseAuth.currentUser
+
             if (user == null) {
+                Log.d("SHOPVM","NULL : $user")
                 startDestination=   Routes.Auth
             } else  {
+                Log.d("SHOPVM","NOT NULL : $user")
                 startDestination=  Routes.Main
             }
             delay(500)

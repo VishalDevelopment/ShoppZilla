@@ -106,7 +106,7 @@ fun BottomBar(firebaseAuth: FirebaseAuth, MainNavHost: NavHostController) {
                     containerColor = Pink80,
                     modifier = Modifier.height(50.dp).animateContentSize(animationSpec)
                     ,
-                    windowInsets = WindowInsets(0.dp)
+                    windowInsets = WindowInsets(0.dp),
                 ) {
                     items.forEachIndexed { index, barItem ->
                         val selected =
@@ -195,7 +195,7 @@ fun BottomBar(firebaseAuth: FirebaseAuth, MainNavHost: NavHostController) {
                     exitTransition = ::slideOutAnim
                 ) {
                     isVisible.value = false
-                    PurchaseFinishScreen(navController) {
+                    PurchaseFinishScreen() {
                         navController.navigate(Routes.Home) {
                             popUpTo(route = Routes.Checkout) {
                                 inclusive = true

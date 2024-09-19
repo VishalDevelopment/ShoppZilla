@@ -49,12 +49,15 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.app.NotificationCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
+import com.example.shoppingapp.App
 import com.example.shoppingapp.DomainLayer.Model.AddressModel
 import com.example.shoppingapp.DomainLayer.Model.CartModel
 import com.example.shoppingapp.DomainLayer.Model.OrderForm
+import com.example.shoppingapp.R
 import com.example.shoppingapp.UiLayer.Navigation.Routes
 import com.example.shoppingapp.UiLayer.Screens.Cart_Screen.CartViewModel
 import com.example.shoppingapp.ui.theme.Pink80
@@ -76,13 +79,53 @@ fun ShippingScreen(
     checkout.setKeyID("rzp_test_Nqy8gnPWtyPySL")
 
     val context = LocalContext.current
+    val notificationManager = App.notificationManager
+
     val uid = firebaseAuth.uid.toString()
     val CartVM: CartViewModel = hiltViewModel()
     val ShippingProduct = ShippingVm.shippingList
+    var OrderState= ShippingVm.orderState.collectAsState()
+
+    val SuccessCount = remember {
+        mutableStateOf(0)
+    }
+    when(OrderState.value){
+        is ShippingState.Error -> {
+            Log.d("PLACED","ERR : ")
+
+        }
+       is ShippingState.Loading -> {
+           Log.d("PLACED","LOAD : ")
+       }
+        is ShippingState.Success -> {
+
+            Log.d("PLACED","SUCCESS : ")
+
+            LaunchedEffect (key1 = Unit){
+
+                val notification = NotificationCompat.Builder(context,App.channelId)
+                    .setSmallIcon(R.drawable.shoppzilla)
+                    .setContentText("Order Status")
+                    .setContentTitle("Order Placed SuccessFully")
+                    .build()
+                notificationManager.notify(1,notification)
+            }
+            SuccessCount.value++
+            if (ShippingProduct.value.size == SuccessCount.value){
+                //Navigate to Home
+                navController.navigate(Routes.Checkout){
+                    popUpTo(route = Routes.Home)
+                }
+               ShippingVm._orderState.value = ShippingState.Loading
+
+            }
+
+        }
+    }
+
     LaunchedEffect(key1 = Unit) {
         ShippingVm.GetAddress(uid)
     }
-
     val Address = remember {
         mutableStateOf<AddressModel>(AddressModel())
     }
@@ -168,11 +211,11 @@ fun ShippingScreen(
                                     )
                                     ShippingVm.placeOrder(orderForm)
                                 }
-                                navController.navigate(Routes.Checkout){
-                                    popUpTo(0){
-                                        inclusive = true
-                                    }
-                                }
+//                                navController.navigate(Routes.Checkout){
+//                                    popUpTo(0){
+//                                        inclusive = true
+//                                    }
+//                                }
                             } else {
                                 //  Then Place Order Only
                                 ShippingProduct.value.forEach {
@@ -183,9 +226,9 @@ fun ShippingScreen(
                                     )
                                     ShippingVm.placeOrder(orderForm)
                                 }
-                                navController.navigate(Routes.Checkout){
-                                    popUpTo(route = Routes.Home)
-                                }
+//                                navController.navigate(Routes.Checkout){
+//                                    popUpTo(route = Routes.Home)
+//                                }
                             }
 
                         }

@@ -1,5 +1,6 @@
 package com.example.shoppingapp.UiLayer.Navigation
 
+import android.util.Log
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.navigation.compose.NavHost
@@ -16,9 +17,7 @@ var startDestination :Any = mutableStateOf<Any>(Routes.Auth)
 @Composable
 fun AppNav(firebaseAuth: FirebaseAuth) {
     val navController = rememberNavController()
-
-
-
+    Log.d("SHOPVM","APPNAV: ${startDestination}")
     NavHost(navController = navController, startDestination = startDestination) {
         navigation<Routes.Auth>(startDestination =Routes.Login) {
             composable<Routes.Login> {

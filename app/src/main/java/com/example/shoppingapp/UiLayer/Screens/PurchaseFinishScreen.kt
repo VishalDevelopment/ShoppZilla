@@ -25,7 +25,7 @@ import com.example.shoppingapp.ui.theme.Pink80
 
 @Composable
 
-fun PurchaseFinishScreen(navController: NavHostController, popAllBackScreen: () -> Unit) {
+fun PurchaseFinishScreen( popAllBackScreen: () -> Unit) {
 
     BackHandler {
         popAllBackScreen()

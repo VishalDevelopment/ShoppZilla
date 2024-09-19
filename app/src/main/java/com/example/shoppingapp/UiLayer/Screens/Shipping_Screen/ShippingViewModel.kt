@@ -15,6 +15,7 @@ import com.example.shoppingapp.UiLayer.Navigation.Routes
 import com.example.shoppingapp.UiLayer.ViewModel.ShoppingVm
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -34,21 +35,21 @@ class ShippingViewModel @Inject constructor(
     }
 
     val _orderState = MutableStateFlow<ShippingState>(ShippingState.Loading)
-    val orderState =_orderState
+    var orderState =_orderState
     fun placeOrder(orderForm: OrderForm) {
         viewModelScope.launch {
             orderProductUseCase.orderProduct(orderForm).collectLatest {
                 when (it) {
                     is ResultState.Error -> {
-                        orderState.value = ShippingState.Error(it.error.toString())
+                        _orderState.value = ShippingState.Error(it.error)
                     }
 
                     is ResultState.Loading -> {
-                        orderState.value = ShippingState.Loading
+                        _orderState.value = ShippingState.Loading
                     }
 
                     is ResultState.Success -> {
-                        orderState.value = ShippingState.Success(it.data)
+                        _orderState.value = ShippingState.Success(it.data)
                     }
                 }
             }
