@@ -1,7 +1,6 @@
 package com.example.shoppingapp.UiLayer.Screens.Home_Screen
 
 import android.util.Log
-import android.widget.Toast
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -68,7 +67,7 @@ import com.example.shoppingapp.ui.theme.Pink80
 
 @Composable
 fun HomeScreen(navController: NavHostController) {
-    val categoryData = remember{ mutableStateOf(emptyList<CategoryModel>()) }
+    val categoryData = remember { mutableStateOf(emptyList<CategoryModel>()) }
     var productData = remember {
         mutableStateOf(emptyList<ProductModel>())
     }
@@ -85,14 +84,15 @@ fun HomeScreen(navController: NavHostController) {
 
         CategoryState.Loading -> {
 
-            Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()){
+            Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
                 CircularProgressIndicator(color = Pink80)
             }
 
         }
 
         is CategoryState.Succes -> {
-               val categoryList = (categorystate.value as CategoryState.Succes).category// Access the list
+            val categoryList =
+                (categorystate.value as CategoryState.Succes).category// Access the list
             categoryData.value = categoryList
 
             Box(modifier = Modifier.fillMaxSize()) {
@@ -102,24 +102,26 @@ fun HomeScreen(navController: NavHostController) {
                         .fillMaxSize()
                         .verticalScroll(rememberScrollState())
                 ) {
-                    SearchBar()
+                    SearchBar(navController)
                     Spacer(modifier = Modifier.padding(vertical = 5.dp))
                     OptionHead("Categories", "See More")
                     Spacer(modifier = Modifier.padding(vertical = 5.dp))
-                    Category(categoryData,navController)
+                    Category(categoryData, navController)
                     Spacer(modifier = Modifier.padding(vertical = 5.dp))
                     OptionHead(title = "Flash Sale", moreData = "See More")
-                    ShoppingList(productData.value,navController)
+                    ShoppingList(productData.value, navController)
                 }
 
             }
+        }
     }
-    }
-    when(productState.value){
+    when (productState.value) {
         is ProductState.Error -> {
         }
+
         ProductState.Loading -> {
         }
+
         is ProductState.Success -> {
             val productList = (productState.value as ProductState.Success).product
             productData.value = productList
@@ -155,10 +157,11 @@ fun OptionHead(title: String, moreData: String) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SearchBar() {
+fun SearchBar(navController: NavHostController) {
     var searchContent by remember {
         mutableStateOf("")
     }
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -167,20 +170,30 @@ fun SearchBar() {
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceEvenly
     ) {
-        OutlinedTextField(
-            value = searchContent,
-            onValueChange = {
-                searchContent = it
-            },
-            leadingIcon = { Icon(imageVector = Icons.Default.Search, contentDescription = null) },
-            placeholder = { Text(text = "Search") },
-            modifier = Modifier.fillMaxWidth(.90f),
-            colors = TextFieldDefaults.outlinedTextFieldColors(
-                focusedBorderColor = Pink80,
-                unfocusedBorderColor = Pink80
-            ),
-            shape = RoundedCornerShape(12.dp)
-        )
+
+            OutlinedTextField(
+                value = searchContent,
+                onValueChange = {
+                    searchContent = it
+                },
+                leadingIcon = {
+                    Icon(
+                        imageVector = Icons.Default.Search,
+                        contentDescription = null
+                    )
+                },
+                placeholder = { Text(text = "Search") },
+                modifier = Modifier
+                    .fillMaxWidth(.90f).clickable {
+                        navController.navigate(Routes.SearchBar)
+                    },
+                colors = TextFieldDefaults.outlinedTextFieldColors(
+                    focusedBorderColor = Pink80,
+                    unfocusedBorderColor = Pink80
+                ),
+                shape = RoundedCornerShape(12.dp), readOnly = true, enabled = false
+            )
+
         Icon(
             imageVector = Icons.Outlined.Notifications,
             contentDescription = null,
@@ -192,9 +205,9 @@ fun SearchBar() {
 @Composable
 fun Category(categoryData: MutableState<List<CategoryModel>>, navController: NavHostController) {
 
-val interactivesource = remember {
-    MutableInteractionSource()
-}
+    val interactivesource = remember {
+        MutableInteractionSource()
+    }
     LazyRow(
         modifier = Modifier
             .fillMaxWidth()
@@ -235,14 +248,14 @@ val interactivesource = remember {
 fun CategoryItem(categoryModel: CategoryModel) {
 
 
-    Log.d("CATEGORYITEM","${categoryModel.imageUrl}")
+    Log.d("CATEGORYITEM", "${categoryModel.imageUrl}")
     val painter = rememberAsyncImagePainter(R.drawable.loading)
     val error = rememberAsyncImagePainter(model = R.drawable.process_error)
     AsyncImage(
-       model = ImageRequest.Builder(LocalContext.current)
-           .data(categoryModel.imageUrl)
-           .setHeader("User-Agent", "Mozilla/5.0")
-           .build(),
+        model = ImageRequest.Builder(LocalContext.current)
+            .data(categoryModel.imageUrl)
+            .setHeader("User-Agent", "Mozilla/5.0")
+            .build(),
         placeholder = painter,
         error = error,
         contentDescription = "Categories",
@@ -267,7 +280,7 @@ fun ShoppingList(product: List<ProductModel>, navController: NavHostController) 
     val dressDescription = product
     LazyRow {
         items(dressDescription) {
-            DressImage(it,navController)
+            DressImage(it, navController)
             Box(modifier = Modifier.padding(vertical = 20.dp))
         }
     }
@@ -279,12 +292,12 @@ fun DressImage(dress: ProductModel, navController: NavHostController) {
 
     val painter = rememberAsyncImagePainter(R.drawable.loading)
     val error = rememberAsyncImagePainter(model = R.drawable.process_error)
-    Log.d("IMAGEPRODUCT","${dress.imageUrl}")
+    Log.d("IMAGEPRODUCT", "${dress.imageUrl}")
     val Context = LocalContext.current
 
 
 
-    Column(horizontalAlignment = Alignment.CenterHorizontally,modifier =Modifier.clickable {
+    Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.clickable {
         // Navigate to Product Screen
         navController.navigate(Routes.ProductDetail(dress.id))
 
@@ -296,15 +309,15 @@ fun DressImage(dress: ProductModel, navController: NavHostController) {
                 .padding(vertical = 15.dp, horizontal = 5.dp), shape = RoundedCornerShape(25.dp)
         ) {
 
-           AsyncImage(
-               model = ImageRequest.Builder(LocalContext.current)
-                   .data(dress.imageUrl)
-                   .setHeader("User-Agent", "Mozilla/5.0")
-                   .build(),
+            AsyncImage(
+                model = ImageRequest.Builder(LocalContext.current)
+                    .data(dress.imageUrl)
+                    .setHeader("User-Agent", "Mozilla/5.0")
+                    .build(),
                 contentDescription = null,
                 Modifier.fillMaxSize(), contentScale = ContentScale.Crop,
-               placeholder = painter,
-               error = error
+                placeholder = painter,
+                error = error
             )
         }
         Card(
@@ -334,7 +347,7 @@ fun DressImage(dress: ProductModel, navController: NavHostController) {
                     fontSize = 10.sp
                 )
                 Text(
-                    text ="Rs ${ dress.discountedPrice }",
+                    text = "Rs ${dress.discountedPrice}",
                     modifier = Modifier.padding(horizontal = 5.dp),
                     fontSize = 10.sp
                 )
@@ -343,7 +356,7 @@ fun DressImage(dress: ProductModel, navController: NavHostController) {
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text ="Rs ${ dress.actualPrice.toString() }",
+                        text = "Rs ${dress.actualPrice.toString()}",
                         textDecoration = TextDecoration.LineThrough,
                         modifier = Modifier.padding(vertical = 5.dp, horizontal = 5.dp),
                         fontSize = 15.sp

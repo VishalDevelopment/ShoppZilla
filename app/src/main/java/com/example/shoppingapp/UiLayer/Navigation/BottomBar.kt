@@ -50,6 +50,7 @@ import com.example.shoppingapp.UiLayer.Screens.Home_Screen.HomeScreen
 import com.example.shoppingapp.UiLayer.Screens.Home_Screen.ProductScreen
 import com.example.shoppingapp.UiLayer.Screens.Profile_Screen.ProfileScreen
 import com.example.shoppingapp.UiLayer.Screens.PurchaseFinishScreen
+import com.example.shoppingapp.UiLayer.Screens.Search_Screen.SearchScreen
 import com.example.shoppingapp.UiLayer.Screens.Shipping_Screen.ShippingScreen
 import com.example.shoppingapp.UiLayer.Screens.Shipping_Screen.ShippingViewModel
 import com.example.shoppingapp.UiLayer.Screens.Wishlist_Screen.WishlistScreen
@@ -104,7 +105,9 @@ fun BottomBar(firebaseAuth: FirebaseAuth, MainNavHost: NavHostController) {
                 if (isVisible.value){
                 BottomAppBar(
                     containerColor = Pink80,
-                    modifier = Modifier.height(50.dp).animateContentSize(animationSpec)
+                    modifier = Modifier
+                        .height(50.dp)
+                        .animateContentSize(animationSpec)
                     ,
                     windowInsets = WindowInsets(0.dp),
                 ) {
@@ -169,13 +172,16 @@ fun BottomBar(firebaseAuth: FirebaseAuth, MainNavHost: NavHostController) {
                     })
                 }
 
-                composable<Routes.ProductDetail> {
+                composable<Routes.ProductDetail> (
+                    enterTransition = ::slideInAnim,
+                    exitTransition = ::slideOutAnim){
                     isVisible.value = false
                     val productId = it.toRoute<Routes.ProductDetail>()
                     ProductScreen(productId.productId, firebaseAuth, navController, ShippingVm)
                 }
 
-                composable<Routes.Category> {
+                composable<Routes.Category>(enterTransition = ::slideInAnim,
+                    exitTransition = ::slideOutAnim) {
                     isVisible.value = false
 
                     val CategoryName = it.toRoute<Routes.Category>()
@@ -202,6 +208,10 @@ fun BottomBar(firebaseAuth: FirebaseAuth, MainNavHost: NavHostController) {
                             }
                         }
                     }
+                }
+
+                composable<Routes.SearchBar>{
+                    SearchScreen()
                 }
             }
         }

@@ -28,6 +28,8 @@ sealed class Routes{
     object Checkout
 
     @Serializable
+    object SearchBar
+    @Serializable
     class Shipping(val Flag: Int)
     @Serializable
     //Nav Graph
