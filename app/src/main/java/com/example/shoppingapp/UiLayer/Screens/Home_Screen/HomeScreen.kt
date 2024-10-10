@@ -1,6 +1,7 @@
 package com.example.shoppingapp.UiLayer.Screens.Home_Screen
 
 import android.util.Log
+import android.widget.Toast
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -25,7 +26,6 @@ import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedTextField
@@ -83,11 +83,7 @@ fun HomeScreen(navController: NavHostController) {
         }
 
         CategoryState.Loading -> {
-
-            Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
-                CircularProgressIndicator(color = Pink80)
-            }
-
+            Home_Shimmer()
         }
 
         is CategoryState.Succes -> {
@@ -104,11 +100,16 @@ fun HomeScreen(navController: NavHostController) {
                 ) {
                     SearchBar(navController)
                     Spacer(modifier = Modifier.padding(vertical = 5.dp))
-                    OptionHead("Categories", "See More")
+                    val context = LocalContext.current
+                    OptionHead("Categories", "See More") {
+                        Toast.makeText(context, "Category-See More", Toast.LENGTH_SHORT).show()
+                    }
                     Spacer(modifier = Modifier.padding(vertical = 5.dp))
                     Category(categoryData, navController)
                     Spacer(modifier = Modifier.padding(vertical = 5.dp))
-                    OptionHead(title = "Flash Sale", moreData = "See More")
+                    OptionHead(title = "Flash Sale", moreData = "See More"){
+                        navController.navigate(Routes.SearchBar)
+                    }
                     ShoppingList(productData.value, navController)
                 }
 
@@ -132,12 +133,16 @@ fun HomeScreen(navController: NavHostController) {
 }
 
 @Composable
-fun OptionHead(title: String, moreData: String) {
+fun OptionHead(title: String, moreData: String, MoveToSearchScreen: () -> Unit) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 10.dp, vertical = 5.dp),
-        horizontalArrangement = Arrangement.SpaceBetween
+            .padding(horizontal = 10.dp, vertical = 5.dp)
+            .clickable {
+                MoveToSearchScreen()
+            },
+        horizontalArrangement = Arrangement.SpaceBetween,
+
     ) {
         Text(
             text = title,
@@ -184,7 +189,8 @@ fun SearchBar(navController: NavHostController) {
                 },
                 placeholder = { Text(text = "Search") },
                 modifier = Modifier
-                    .fillMaxWidth(.90f).clickable {
+                    .fillMaxWidth(.90f)
+                    .clickable {
                         navController.navigate(Routes.SearchBar)
                     },
                 colors = TextFieldDefaults.outlinedTextFieldColors(

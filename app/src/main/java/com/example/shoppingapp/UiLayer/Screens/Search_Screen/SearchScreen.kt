@@ -1,6 +1,8 @@
 package com.example.shoppingapp.UiLayer.Screens.Search_Screen
 
 import android.util.Log
+import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -40,16 +42,17 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
 import com.example.shoppingapp.DomainLayer.Model.SearchModel
+import com.example.shoppingapp.UiLayer.Navigation.Routes
 import com.example.shoppingapp.ui.theme.Pink80
 import java.util.Locale
 
 @Composable
-fun SearchScreen() {
+fun SearchScreen(navController: NavHostController) {
 
     val SearchVM: SearchViewModel = hiltViewModel()
-
     LaunchedEffect(key1 = Unit) {
         SearchVM.getProducts()
     }
@@ -83,14 +86,24 @@ fun SearchScreen() {
 
                 is ProductState.Success -> {
                     val productdata = (AllProducts.value as ProductState.Success).data
-                    productdata.forEach {
-                        productList.value.add(SearchModel(it.imageUrl,it.name,it.discountedPrice))
+
+                        productdata.forEach {
+                            productList.value.add(
+                                SearchModel(
+                                    it.id,
+                                    it.imageUrl,
+                                    it.name,
+                                    it.discountedPrice
+                                )
+                            )
                     }
                     Log.d("DATA","${productList.value}")
 
                     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.TopCenter){
 
-                    SearchResult(productList, search)
+
+                    SearchResult(productList, search,navController)
+
                     }
                 }
             }
@@ -135,34 +148,39 @@ fun SearchBarLayout(search: (search: String) -> Unit) {
 }
 
 @Composable
-fun SearchResult(dataItem: MutableState<MutableList<SearchModel>>, search: MutableState<String>) {
+fun SearchResult(dataItem: MutableState<MutableList<SearchModel>>, search: MutableState<String>,navController: NavHostController) {
 
-
-    LazyColumn(modifier = Modifier.fillMaxWidth()) {
-        val filterList = if (search.value.isEmpty()) {
-            dataItem.value
-        } else {
-            val result = mutableListOf<SearchModel>()
-            dataItem.value.forEach{
-                if (it.name?.toLowerCase(Locale.getDefault())
-                        ?.contains(search.value.toLowerCase(Locale.getDefault())) == true
-                ) {
-                    result.add(SearchModel(it.imageUrl, it.name, it.price))
-                }
+    val filterList = if (search.value.isEmpty()) {
+        dataItem.value
+    } else {
+        val result = mutableListOf<SearchModel>()
+        dataItem.value.forEach{
+            if (it.name?.toLowerCase(Locale.getDefault())
+                    ?.contains(search.value.toLowerCase(Locale.getDefault())) == true
+            ) {
+                result.add(SearchModel(it.productId,it.imageUrl, it.name, it.price))
             }
-            result
         }
+        result
+    }
+    LazyColumn(modifier = Modifier.fillMaxWidth()) {
+
         items(filterList) {
-            if (it.name !=null && it.imageUrl !=null){
-                CustomLayoutForSearch(it.name, it.imageUrl, it.price)
+            if (it.name !=null && it.imageUrl !=null&&it.productId!=null){
+                CustomLayoutForSearch(it.productId,it.name, it.imageUrl, it.price,navController)
             }
         }
     }
 }
 
-//
 @Composable
-fun CustomLayoutForSearch(name: String, imageUrl: String, price: Any?) {
+fun CustomLayoutForSearch(
+    productId:String,
+    name: String,
+    imageUrl: String,
+    price: Any?,
+    navController: NavHostController
+) {
 
     Row(
         horizontalArrangement = Arrangement.SpaceAround,
@@ -170,6 +188,9 @@ fun CustomLayoutForSearch(name: String, imageUrl: String, price: Any?) {
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 5.dp)
+            .clickable {
+                navController.navigate(Routes.ProductDetail(productId))
+            }
     ) {
         Row(
             modifier = Modifier

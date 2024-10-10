@@ -4,7 +4,6 @@ import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.animateContentSize
-import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Box
@@ -47,7 +46,7 @@ import androidx.navigation.toRoute
 import com.example.shoppingapp.UiLayer.Screens.Cart_Screen.CartScreen
 import com.example.shoppingapp.UiLayer.Screens.Category_Screen.CategoryScreen
 import com.example.shoppingapp.UiLayer.Screens.Home_Screen.HomeScreen
-import com.example.shoppingapp.UiLayer.Screens.Home_Screen.ProductScreen
+import com.example.shoppingapp.UiLayer.Screens.Home_Screen.Product_Screen.ProductScreen
 import com.example.shoppingapp.UiLayer.Screens.Profile_Screen.ProfileScreen
 import com.example.shoppingapp.UiLayer.Screens.PurchaseFinishScreen
 import com.example.shoppingapp.UiLayer.Screens.Search_Screen.SearchScreen
@@ -211,7 +210,8 @@ fun BottomBar(firebaseAuth: FirebaseAuth, MainNavHost: NavHostController) {
                 }
 
                 composable<Routes.SearchBar>{
-                    SearchScreen()
+                    isVisible.value = false
+                    SearchScreen(navController)
                 }
             }
         }
